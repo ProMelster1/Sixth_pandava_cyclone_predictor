@@ -1,0 +1,14 @@
+{
+  "name": "power-grid-extract",
+  "private": true,
+  "type": "module",
+  "description": "Extracts km of power line per 0.1° cell from the UNDP grid.pmtiles",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@mapbox/vector-tile": "3.0.0",
+    "pbf": "5.1.2",
+    "pmtiles": "4.5.0"
+  }
+}

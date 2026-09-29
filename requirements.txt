@@ -1,0 +1,5 @@
+# Model training & inference (the dashboard itself needs no Python packages)
+numpy>=1.26
+pandas>=2.1
+pillow>=10.0
+torch>=2.2

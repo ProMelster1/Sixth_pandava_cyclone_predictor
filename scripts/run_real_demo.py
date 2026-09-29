@@ -5,9 +5,9 @@ Runs the full IDENTIFY -> CLASSIFY -> PREDICT -> uncertainty -> GeoJSON
 pipeline on one real, named storm from your joined manifest (built by
 build_incyde_manifest.py + join_ibtracs_track.py) instead of synthetic data.
 
-Usage:
+Usage (from the repo root):
     python scripts/run_real_demo.py \
-        --manifest incyde_manifest_with_track.csv \
+        --manifest data/incyde_manifest_with_track.csv \
         --storm PHAILIN \
         --seq_len 4 --horizon 4
 """
@@ -21,9 +21,10 @@ import numpy as np
 import pandas as pd
 import torch
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "model"))
 
 from dataset_loader import CYCLONE_CATEGORIES, load_image_any
+from config import FORECAST_GEOJSON
 from inference_pipeline import load_models, run_inference, to_geojson
 
 
@@ -54,11 +55,11 @@ def main(args):
     )
 
     print(json.dumps(result, indent=2))
-    to_geojson(result, out_path="dashboard/data/latest_forecast.geojson")
+    to_geojson(result, out_path=FORECAST_GEOJSON)
 
     print(f"\nGround truth for reference — {args.storm} at {current['timestamp']}: "
           f"category={current.get('category')}, MSWS={current.get('msws_kts')} kt")
-    print("Wrote dashboard/data/latest_forecast.geojson — run `python dashboard_app.py` to view it.")
+    print(f"Wrote {FORECAST_GEOJSON} — run `python serve.py` to view it.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Large or regenerable data (see data/README.md)
+data/images/
+data/sequences/
+data/synthetic_*/
+data/*_unmatched.csv
+
+# Trained weights (keep the folder, not the files)
+checkpoints/*
+!checkpoints/.gitkeep
+
+# Tooling inputs/outputs for rebuilding dashboard grids
+tools/dashboard_data/raw/
+tools/dashboard_data/**/node_modules/
+tools/dashboard_data/**/*.bin
+tools/dashboard_data/**/*.json
+!tools/dashboard_data/power_grid/package.json
+*.pmtiles
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

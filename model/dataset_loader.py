@@ -10,6 +10,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from config import resolve_data_path
+
 # IMD cyclone intensity categories as they actually appear in the real INCYDE
 # labels (D/DD/CS/SCS/VSCS/ESCS/SuCS - no "Low Pressure Area" since these are
 # all already-named, tracked storms). Index order must match CATEGORY_MAP in
@@ -31,7 +33,9 @@ def load_image_any(path):
     """
     Loads either a synthetic .npy patch (C, H, W) or a real INCYDE .jpg
     (grayscale IR imagery) resized to a fixed size and returned as (1, H, W).
+    Relative paths are resolved under the data/ folder (see config.py).
     """
+    path = resolve_data_path(path)
     if str(path).endswith(".npy"):
         return np.load(path).astype(np.float32)
 
@@ -95,8 +99,8 @@ class CycloneSequenceDataset(Dataset):
 
     def __getitem__(self, idx):
         row = self.manifest.iloc[idx]
-        seq = np.load(row["sequence_path"]).astype(np.float32)
-        target = np.load(row["target_path"]).astype(np.float32)
+        seq = np.load(resolve_data_path(row["sequence_path"])).astype(np.float32)
+        target = np.load(resolve_data_path(row["target_path"])).astype(np.float32)
 
         seq = (seq - seq.mean()) / (seq.std() + 1e-6)
         return torch.from_numpy(seq), torch.from_numpy(target)

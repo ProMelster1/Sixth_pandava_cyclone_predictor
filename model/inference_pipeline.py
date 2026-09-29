@@ -17,12 +17,13 @@ import os
 import numpy as np
 import torch
 
+from config import CHECKPOINTS_DIR, FORECAST_GEOJSON
 from dataset_loader import CYCLONE_CATEGORIES
 from models import CycloneDetectionCNN, CycloneClassificationCNN, TrackIntensityPredictor
 from uncertainty import predict_with_uncertainty
 
 
-def load_models(checkpoint_dir="checkpoints", in_channels=1,
+def load_models(checkpoint_dir=CHECKPOINTS_DIR, in_channels=1,
                 num_classes=len(CYCLONE_CATEGORIES), horizon=4,
                 device="cpu"):
 
@@ -73,16 +74,21 @@ def run_inference(patch, sequence, lat, lon, models, device="cpu",
     detector, classifier, predictor = models
 
     x_patch = torch.from_numpy(patch).unsqueeze(0).float().to(device)
-    det_probs, det_entropy = predict_with_uncertainty(detector, x_patch, n_samples=mc_samples, task="detection")
-    cyclone_present = bool(det_probs[0, 1] > detection_threshold)
-
-    result = {
-        "detection": {
-            "cyclone_present": cyclone_present,
-            "confidence": float(det_probs[0, 1]),
-            "uncertainty_entropy": float(det_entropy[0]),
+    if detector is None:
+        # No trained detector (INCYDE has no cyclone-free frames): every
+        # INCYDE frame is a tracked storm, so go straight to classification.
+        result = {"detection": {"cyclone_present": True, "confidence": None, "uncertainty_entropy": None}}
+        cyclone_present = True
+    else:
+        det_probs, det_entropy = predict_with_uncertainty(detector, x_patch, n_samples=mc_samples, task="detection")
+        cyclone_present = bool(det_probs[0, 1] > detection_threshold)
+        result = {
+            "detection": {
+                "cyclone_present": cyclone_present,
+                "confidence": float(det_probs[0, 1]),
+                "uncertainty_entropy": float(det_entropy[0]),
+            }
         }
-    }
 
     if not cyclone_present:
         return result
@@ -120,7 +126,7 @@ def run_inference(patch, sequence, lat, lon, models, device="cpu",
     return result
 
 
-def to_geojson(result, out_path="Dashboard-file/data/latest_forecast.geojson"):
+def to_geojson(result, out_path=FORECAST_GEOJSON):
     """Converts a single inference result into a GeoJSON FeatureCollection the dashboard can render."""
     features = []
 
@@ -159,17 +165,9 @@ def to_geojson(result, out_path="Dashboard-file/data/latest_forecast.geojson"):
             })
 
     geojson = {"type": "FeatureCollection", "features": features}
-    target_paths = [out_path, "Dashboard-file/data/latest_forecast.geojson", "dashboard/data/latest_forecast.geojson"]
-    written = set()
-    for path in target_paths:
-        if path and path not in written:
-            try:
-                os.makedirs(os.path.dirname(path), exist_ok=True)
-                with open(path, "w") as f:
-                    json.dump(geojson, f, indent=2)
-                written.add(path)
-            except Exception:
-                pass
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(geojson, f, indent=2)
     return geojson
 
 
@@ -177,10 +175,10 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     models = load_models(device=device)
 
-    # --- Replace this block with real preprocessed patches/sequences ---
+    # --- Smoke test on random single-channel frames (real INCYDE frames are 1 x 128 x 128) ---
     rng = np.random.default_rng(0)
-    dummy_patch = rng.normal(size=(4, 64, 64)).astype(np.float32)
-    dummy_sequence = rng.normal(size=(8, 4, 64, 64)).astype(np.float32)
+    dummy_patch = rng.normal(size=(1, 128, 128)).astype(np.float32)
+    dummy_sequence = rng.normal(size=(4, 1, 128, 128)).astype(np.float32)
     # ---------------------------------------------------------------
 
     result = run_inference(

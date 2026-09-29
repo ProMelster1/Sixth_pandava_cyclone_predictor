@@ -1,10 +1,13 @@
 """
 Unified Training Script
 =========================
-Usage:
-    python train.py --task detection --epochs 10 --synthetic
-    python train.py --task classification --epochs 15 --manifest data/classification_manifest.csv
-    python train.py --task prediction --epochs 20 --manifest data/prediction_manifest.csv
+Usage (from the repo root):
+    python model/train.py --task classification --epochs 1 --synthetic
+    python model/train.py --task classification --epochs 15 --in_channels 1 --manifest data/incyde_manifest.csv
+    python model/train.py --task prediction --epochs 20 --in_channels 1 --manifest data/sequence_manifest.csv
+
+Checkpoints are written to checkpoints/<task>_model.pt (synthetic runs go to
+checkpoints/synthetic/ so they never overwrite real weights).
 
 Use --synthetic to sanity-check the whole pipeline with generated dummy data
 before wiring in real INSAT-3D/3DR + reanalysis data.
@@ -12,10 +15,6 @@ before wiring in real INSAT-3D/3DR + reanalysis data.
 
 import argparse
 import os
-import sys 
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import pandas as pd
 import torch
 import torch.nn as nn
@@ -27,6 +26,7 @@ from dataset_loader import (
     generate_synthetic_dataset,
 )
 from models import CycloneDetectionCNN, CycloneClassificationCNN, TrackIntensityPredictor
+from config import CHECKPOINTS_DIR, DATA_DIR
 
 
 def get_model(task, in_channels=4, num_classes=7, horizon=4):
@@ -52,7 +52,7 @@ def train(args):
 
     if args.synthetic or args.manifest is None:
         manifest = generate_synthetic_dataset(
-            out_dir=f"synthetic_{args.task}", task=args.task,
+            out_dir=os.path.join(DATA_DIR, f"synthetic_{args.task}"), task=args.task,
         )
     else:
         manifest = pd.read_csv(args.manifest)
@@ -88,8 +88,9 @@ def train(args):
         avg_loss = running_loss / len(loader.dataset)
         print(f"[{args.task}] epoch {epoch + 1}/{args.epochs} - loss: {avg_loss:.4f}")
 
-    os.makedirs("checkpoints", exist_ok=True)
-    ckpt_path = os.path.join("checkpoints", f"{args.task}_model.pt")
+    ckpt_dir = os.path.join(CHECKPOINTS_DIR, "synthetic") if (args.synthetic or args.manifest is None) else CHECKPOINTS_DIR
+    os.makedirs(ckpt_dir, exist_ok=True)
+    ckpt_path = os.path.join(ckpt_dir, f"{args.task}_model.pt")
     torch.save(model.state_dict(), ckpt_path)
     print(f"Saved checkpoint to {ckpt_path}")
 

@@ -9,11 +9,11 @@ CycloneSequenceDataset in dataset_loader.py.
 Only uses non-augmented, track-matched rows (one real frame per timestamp) -
 augmented duplicates would fake extra "time steps" that don't really exist.
 
-Usage:
+Usage (from the repo root):
     python scripts/build_sequences.py \
-        --manifest incyde_manifest_with_track.csv \
-        --out_dir sequences \
-        --output sequence_manifest.csv \
+        --manifest data/incyde_manifest_with_track.csv \
+        --out_dir data/sequences \
+        --output data/sequence_manifest.csv \
         --seq_len 4 --horizon 4
 """
 
@@ -24,7 +24,8 @@ import sys
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "model"))
+from config import to_data_relative
 from dataset_loader import load_image_any
 
 
@@ -79,7 +80,7 @@ def build_sequences(manifest_path, out_dir, output_path, seq_len=4, horizon=4, m
             np.save(tgt_path, target)
 
             rows.append({
-                "sequence_path": seq_path, "target_path": tgt_path,
+                "sequence_path": to_data_relative(seq_path), "target_path": to_data_relative(tgt_path),
                 "name": name, "year": year,
                 "start_time": str(past.iloc[0]["timestamp"]),
                 "split": past.iloc[-1].get("split", "train"),

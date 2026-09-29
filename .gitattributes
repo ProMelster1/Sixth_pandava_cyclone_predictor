@@ -1,0 +1,9 @@
+# Consistent line endings for everyone who clones
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+
+# Generated data grids: hide from diffs and language stats
+dashboard/assets/*_grid.js linguist-generated=true -diff
+dashboard/assets/land_dots.json linguist-generated=true -diff
+data/*.csv linguist-generated=true -diff

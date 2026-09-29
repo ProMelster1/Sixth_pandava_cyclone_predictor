@@ -23,19 +23,26 @@ extension and augmentation suffix included, e.g.:
 So each row maps to exactly one file - no guessing needed, just a direct
 os.path.join(images_dir, filename) lookup.
 
-Usage:
+Usage (from the repo root):
     python scripts/build_incyde_manifest.py \
-        --labels Cropped_cyclone_labels.csv \
-        --images_dir Cropped_cyclone_images \
-        --output incyde_manifest.csv \
+        --labels data/Cropped_cyclone_labels.csv \
+        --images_dir data/images \
+        --output data/incyde_manifest.csv \
         --include_augmented
+
+Image paths inside data/ are stored relative to it, so the manifest stays portable.
 """
 
 import argparse
 import os
 import re
 
+import sys
+
 import pandas as pd
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "model"))
+from config import to_data_relative
 
 # IMD cyclone category scale actually present in this dataset (no "Low
 # Pressure Area" here since these are all already-named, tracked storms).
@@ -115,7 +122,7 @@ def build_manifest(labels_path, images_dir, output_path, include_augmented=False
             continue
 
         rows.append({
-            "image_path": img_path,
+            "image_path": to_data_relative(img_path),
             "label": CATEGORY_MAP[category],
             "category": category,
             "msws_kts": row[wind_col],
