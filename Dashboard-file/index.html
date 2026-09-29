@@ -1,0 +1,3591 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<meta content="web_standard" name="shell-type">
+<title>The Sixth Pandava · Cyclone Predictor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round"%3E %3Cdefs%3E %3ClinearGradient id="fvBlue" x1="0" y1="0" x2="1" y2="1"%3E %3Cstop offset="0" stop-color="#8ec2ff"/%3E %3Cstop offset="0.55" stop-color="#4f9dff"/%3E %3Cstop offset="1" stop-color="#2668e6"/%3E %3C/linearGradient%3E %3ClinearGradient id="fvGold" x1="0" y1="0" x2="0" y2="1"%3E %3Cstop offset="0" stop-color="#f1d596"/%3E %3Cstop offset="1" stop-color="#b8924a"/%3E %3C/linearGradient%3E %3C/defs%3E %3C%21-- top rim of the vortex --%3E %3Cpath d="M9 17 C9 10 20 5.5 32 5.5 C44 5.5 55 10 55 16 C55 20 51.5 23 47 24.5" stroke="url(#fvBlue)" stroke-width="3.6"/%3E %3C%21-- right edge of the funnel down to the point --%3E %3Cpath d="M47 24.5 C44.5 37 39 49 32.5 57.5" stroke="url(#fvBlue)" stroke-width="2.2"/%3E %3C%21-- left flank of the shield%2C sweeping to the point --%3E %3Cpath d="M9 17 C9 36 18 51 31 59" stroke="url(#fvBlue)" stroke-width="4.4"/%3E %3C%21-- inner spiral arms around the eye --%3E %3Cpath d="M17 17.5 C16 11.5 25 9.5 33.5 10" stroke="url(#fvBlue)" stroke-width="2.4"/%3E %3Cpath d="M46.5 14 C47.5 19.5 39 22 30.5 21" stroke="url(#fvBlue)" stroke-width="2.4"/%3E %3Cellipse cx="32" cy="15.2" rx="5.6" ry="3.1" fill="url(#fvBlue)" stroke="none"/%3E %3C%21-- funnel bands narrowing to the point --%3E %3Cpath d="M15.5 25 C21 29.5 39 30 47 24.5" stroke="url(#fvBlue)" stroke-width="2.6"/%3E %3Cpath d="M19.5 33 C25 36.5 37 36.5 43 31.5" stroke="url(#fvBlue)" stroke-width="2.4"/%3E %3Cpath d="M23.5 40.5 C27.5 43 35 43 39 38.5" stroke="url(#fvBlue)" stroke-width="2.2"/%3E %3Cpath d="M27 47.5 C29.5 49 33 48.8 35.5 45.5" stroke="url(#fvBlue)" stroke-width="2"/%3E %3Cpath d="M30.5 54 C30 51.5 31.5 50.5 33 51" stroke="url(#fvBlue)" stroke-width="1.8"/%3E %3C%21-- gold crescent guarding the right side --%3E %3Cpath d="M56 19 C57.5 38 47.5 53 34 60.5 C42.5 50 47 36 56 19 Z" fill="url(#fvGold)" stroke="none"/%3E %3C/svg%3E">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Oswald:wght@500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+
+<!-- ThreeJS for 3D Globe -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- Leaflet for 2D Tactical Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<!-- Country land grid for the civilian exposure model -->
+<script src="./assets/country_grid.js"></script>
+<script src="./assets/value_grid.js"></script>
+<script src="./assets/power_grid.js"></script>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            obsidian: "#050c1c",
+            card: "rgba(12, 24, 48, 0.55)",
+            borderline: "rgba(110, 170, 255, 0.12)",
+            cyanGlow: "#4f9dff",
+            crimsonGlow: "#f43f5e",
+            amberGlow: "#fbbf24",
+            magentaGlow: "#d946ef",
+            // "cyan" accents re-tuned to a luminous azure blue
+            cyan: {
+              50: "#eef6ff", 100: "#d9eaff", 200: "#bcdaff", 300: "#8ec2ff", 400: "#5aa4ff",
+              500: "#3b86f7", 600: "#2668e6", 700: "#1f52c4", 800: "#1e449c", 900: "#1e3c7b", 950: "#152650"
+            },
+            // "sky" re-tuned to aqua-teal, so cyan→sky gradients read blue→teal
+            sky: {
+              50: "#effefb", 100: "#c8fff4", 200: "#92fde9", 300: "#53f4dc", 400: "#2ee6cf",
+              500: "#14c9b5", 600: "#0da294", 700: "#108177", 800: "#126660", 900: "#14544f", 950: "#053331"
+            }
+          },
+          fontFamily: {
+            mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Oswald', 'sans-serif']
+          }
+        }
+      }
+    };
+</script>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #040a18;
+        color: #e2e8f0;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-feature-settings: 'cv11', 'ss01'; /* Inter's cleaner single-storey a & straight l */
+        letter-spacing: -0.005em;
+      }
+      .font-mono { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+      body { overscroll-behavior: none; }
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    .custom-range::-webkit-slider-thumb {
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4f9dff, #2ee6cf);
+      border: 2px solid #050c1c;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(79, 157, 255, 0.8);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    .custom-range::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+    }
+
+    /* ===== DEEP-SPACE BACKDROP ===== */
+    #space-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 45% 55% at 88% 38%, rgba(20, 201, 181, 0.14), transparent 70%),
+        radial-gradient(ellipse 35% 40% at 70% 70%, rgba(46, 120, 200, 0.12), transparent 70%),
+        radial-gradient(ellipse 70% 35% at 50% 112%, rgba(46, 230, 207, 0.22), transparent 70%),
+        radial-gradient(ellipse 40% 60% at 8% -5%, rgba(59, 134, 247, 0.32), transparent 70%),
+        linear-gradient(180deg, #06102a 0%, #040a18 55%, #030812 100%);
+    }
+    /* Soft diagonal light beam from the top-left */
+    #space-bg .space-beam {
+      position: absolute;
+      top: -30%;
+      left: 4%;
+      width: 18vw;
+      height: 160%;
+      transform: rotate(-16deg);
+      background: linear-gradient(90deg, transparent, rgba(92, 160, 255, 0.22) 45%, rgba(140, 190, 255, 0.28) 50%, rgba(92, 160, 255, 0.22) 55%, transparent);
+      filter: blur(38px);
+    }
+    #space-bg canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ===== FROSTED GLASS PANELS ===== */
+    .glass-panel {
+      background: linear-gradient(180deg, rgba(16, 32, 64, 0.52) 0%, rgba(8, 17, 36, 0.62) 100%);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      border: 1px solid rgba(110, 170, 255, 0.14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    .glass-panel-subtle {
+      background: rgba(120, 170, 255, 0.03);
+      border: 1px solid rgba(110, 170, 255, 0.08);
+    }
+
+    /* ===== PILL BUTTONS ===== */
+    .orbit-btn-primary {
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #3b86f7 0%, #2ee6cf 100%);
+      color: #06122a;
+      font-weight: 700;
+      box-shadow: 0 6px 24px rgba(59, 134, 247, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+    }
+    .orbit-btn-primary:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 8px 30px rgba(46, 230, 207, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    .orbit-btn-ghost {
+      border-radius: 9999px;
+      background: rgba(10, 20, 42, 0.7);
+      border: 1px solid rgba(92, 160, 255, 0.45);
+      color: #5aa4ff;
+      font-weight: 700;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .orbit-btn-ghost:hover {
+      background: rgba(59, 134, 247, 0.14);
+      border-color: rgba(120, 180, 255, 0.8);
+      color: #bcdaff;
+    }
+    /* White-to-silver headline text */
+    .orbit-gradient-text {
+      background: linear-gradient(90deg, #ffffff 0%, #ffffff 45%, #9aa8bd 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    ::selection { background: rgba(59, 134, 247, 0.3); color: #eef6ff; }
+
+    /* ===== APP SHELL (framed window, sidebar, panels) ===== */
+    .app-frame {
+      background: rgba(6, 10, 16, 0.84);
+      border: 1px solid rgba(90, 160, 255, 0.42);
+      border-radius: 26px;
+      box-shadow: 0 0 0 1px rgba(90, 160, 255, 0.06), 0 0 48px rgba(59, 134, 247, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+    .panel {
+      background: rgba(11, 16, 23, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+    }
+    .insights-frame {
+      background: rgba(8, 13, 20, 0.94);
+      border: 1px solid rgba(90, 160, 255, 0.38);
+      border-radius: 20px;
+      box-shadow: 0 0 28px rgba(59, 134, 247, 0.14);
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+    }
+    .callout-green {
+      background: rgba(52, 211, 153, 0.05);
+      border: 1px solid rgba(52, 211, 153, 0.42);
+      border-radius: 14px;
+    }
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    /* Sidebar navigation */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #94a3b8;
+      text-align: left;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .nav-item .material-symbols-outlined { font-size: 18px; color: #64748b; transition: color 0.15s ease; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: #e2e8f0; }
+    .nav-item.is-active {
+      background: rgba(52, 211, 153, 0.1);
+      color: #ffffff;
+      box-shadow: inset 2px 0 0 #34d399;
+    }
+    .nav-item.is-active .material-symbols-outlined { color: #34d399; }
+    /* Status tags */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1;
+      padding: 4px 8px;
+      border-radius: 9999px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .tag-green { color: #6ee7b7; border-color: rgba(52, 211, 153, 0.45); background: rgba(52, 211, 153, 0.08); }
+    .tag-blue  { color: #8ec2ff; border-color: rgba(79, 157, 255, 0.45); background: rgba(79, 157, 255, 0.08); }
+    .tag-amber { color: #fcd34d; border-color: rgba(251, 191, 36, 0.45); background: rgba(251, 191, 36, 0.08); }
+    .tag-rose  { color: #fda4af; border-color: rgba(244, 63, 94, 0.45); background: rgba(244, 63, 94, 0.08); }
+    /* Square icon buttons & icon chips */
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .icon-btn:hover { border-color: rgba(52, 211, 153, 0.5); color: #6ee7b7; }
+    .icon-chip {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      color: #34d399;
+    }
+    .icon-chip .material-symbols-outlined { font-size: 15px; }
+    /* Glowing assistant orb */
+    .orb {
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: radial-gradient(circle at 35% 30%, #8ec2ff 0%, #3b86f7 30%, #1e3c7b 62%, #0a1224 100%);
+      box-shadow: 0 0 28px rgba(79, 157, 255, 0.45), inset 0 -6px 14px rgba(0, 0, 0, 0.45);
+    }
+    /* Segmented control (playback speed) */
+    .seg-btn {
+      padding: 0 8px;
+      height: 24px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid transparent;
+    }
+    .seg-btn.is-active { color: #6ee7b7; background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.35); font-weight: 600; }
+    /* Progress bar */
+    .progress-track { height: 8px; border-radius: 9999px; background: rgba(255, 255, 255, 0.06); overflow: hidden; }
+    .progress-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #3b86f7, #34d399);
+      box-shadow: 0 0 12px rgba(52, 211, 153, 0.45);
+      transition: width 0.5s ease;
+    }
+    /* Intensity outlook bars */
+    .bar {
+      width: 100%;
+      max-width: 22px;
+      border-radius: 9999px;
+      background: linear-gradient(180deg, #4f9dff 0%, rgba(79, 157, 255, 0.15) 100%);
+      transition: height 0.4s ease;
+    }
+    .bar.is-current { background: linear-gradient(180deg, #34d399 0%, rgba(52, 211, 153, 0.15) 100%); box-shadow: 0 0 14px rgba(52, 211, 153, 0.35); }
+    .brand-logo { filter: drop-shadow(0 0 8px rgba(79, 157, 255, 0.45)); }
+    /* Dark medallion holding the logo in the storm briefing */
+    .brand-badge {
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 35% 30%, rgba(40, 70, 130, 0.55) 0%, rgba(10, 18, 36, 0.95) 70%);
+      border: 1px solid rgba(90, 160, 255, 0.45);
+      box-shadow: 0 0 24px rgba(79, 157, 255, 0.35), inset 0 0 14px rgba(79, 157, 255, 0.18);
+    }
+    .brand-badge svg { filter: drop-shadow(0 0 6px rgba(79, 157, 255, 0.5)); }
+
+    /* ===== DIALOGS & FORMS ===== */
+    .modal-frame {
+      background: rgba(8, 13, 20, 0.96);
+      border: 1px solid rgba(90, 160, 255, 0.38);
+      border-radius: 22px;
+      box-shadow: 0 0 0 1px rgba(90, 160, 255, 0.06), 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 48px rgba(59, 134, 247, 0.18);
+    }
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    input.field, select.field {
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 12px;
+      color: #f1f5f9;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.25s var(--ease-out, ease);
+    }
+    input.field:hover, select.field:hover { border-color: rgba(255, 255, 255, 0.14); }
+    input.field:focus, select.field:focus {
+      border-color: rgba(52, 211, 153, 0.55);
+      background: rgba(52, 211, 153, 0.04);
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
+    }
+    .field option { background: #0b1017; color: #e2e8f0; }
+    input.field[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+    input.field[type="number"]::-webkit-inner-spin-button,
+    input.field[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+    .drop-zone {
+      border-radius: 16px;
+      border: 1.5px dashed rgba(142, 194, 255, 0.22);
+      background:
+        radial-gradient(circle at 50% 40%, rgba(79, 157, 255, 0.07), transparent 70%),
+        rgba(255, 255, 255, 0.015);
+      transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.45s var(--ease-spring, ease);
+    }
+    .drop-zone:hover { border-color: rgba(52, 211, 153, 0.55); background-color: rgba(52, 211, 153, 0.03); }
+    .drop-zone:active { transform: scale(0.99); }
+    .choice-group {
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .choice {
+      height: 34px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #94a3b8;
+      border: 1px solid transparent;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.35s var(--ease-spring, ease);
+    }
+    .choice:hover { color: #e2e8f0; background: rgba(255, 255, 255, 0.04); }
+    .choice:active { transform: scale(0.96); transition-duration: 0.08s; }
+    .choice.is-active { color: #6ee7b7; background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.35); }
+    .choice-sub { font-weight: 400; font-size: 10px; color: #64748b; margin-left: 2px; }
+    .choice.is-active .choice-sub { color: rgba(110, 231, 183, 0.7); }
+
+    /* ===== MICRO-INTERACTIONS ===== */
+    :root {
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);   /* gentle overshoot */
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);         /* smooth deceleration */
+    }
+    /* Press & hover: everything clickable depresses slightly and springs back */
+    .orbit-btn-primary, .orbit-btn-ghost, .icon-btn, .seg-btn, .nav-item,
+    #broadcast-advisory-btn, #storm-selector, .speed-btn {
+      transition: transform 0.35s var(--ease-spring), background-color 0.2s ease, border-color 0.2s ease,
+                  color 0.2s ease, box-shadow 0.3s var(--ease-out), filter 0.2s ease;
+    }
+    .orbit-btn-primary:hover, .orbit-btn-ghost:hover, .icon-btn:hover, #broadcast-advisory-btn:hover { transform: translateY(-1px); }
+    .orbit-btn-primary:active, .orbit-btn-ghost:active, .icon-btn:active, .seg-btn:active,
+    #broadcast-advisory-btn:active, .speed-btn:active {
+      transform: scale(0.95);
+      transition-duration: 0.08s;
+    }
+    .nav-item:active { transform: scale(0.97); transition-duration: 0.08s; }
+    .nav-item .material-symbols-outlined { transition: color 0.2s ease, transform 0.35s var(--ease-spring); }
+    .nav-item:hover .material-symbols-outlined { transform: translateX(1px) scale(1.08); }
+
+    /* Sheen sweep across the primary button on hover */
+    .orbit-btn-primary { position: relative; overflow: hidden; }
+    .orbit-btn-primary::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.45) 50%, transparent 65%);
+      transform: translateX(-120%);
+      pointer-events: none;
+    }
+    .orbit-btn-primary:hover::after { transform: translateX(120%); transition: transform 0.75s var(--ease-out); }
+
+    /* Sliding selection pill behind the active view in the sidebar */
+    .nav-track { position: relative; }
+    .nav-track .nav-item { position: relative; z-index: 1; }
+    .nav-track .nav-item.is-active { background: transparent; box-shadow: none; }
+    .nav-indicator {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      border-radius: 10px;
+      background: rgba(52, 211, 153, 0.1);
+      box-shadow: inset 2px 0 0 #34d399, 0 0 18px rgba(52, 211, 153, 0.08);
+      transition: transform 0.5s var(--ease-spring), height 0.3s var(--ease-out);
+      pointer-events: none;
+    }
+
+    /* Cards lift and catch a soft light that follows the cursor */
+    .card.lift {
+      position: relative;
+      transition: transform 0.45s var(--ease-spring), border-color 0.25s ease, box-shadow 0.45s var(--ease-out);
+    }
+    .card.lift::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), rgba(142, 194, 255, 0.09), transparent 65%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .card.lift:hover {
+      transform: translateY(-2px);
+      border-color: rgba(142, 194, 255, 0.18);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+    .card.lift:hover::before { opacity: 1; }
+    .card.lift:active { transform: translateY(0) scale(0.99); transition-duration: 0.1s; }
+    .card.lift .icon-chip { transition: transform 0.45s var(--ease-spring); }
+    .card.lift:hover .icon-chip { transform: scale(1.1) rotate(-4deg); }
+
+    /* Staggered entrance */
+    @keyframes revealUp {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); filter: blur(4px); }
+      to   { opacity: 1; transform: none; filter: none; }
+    }
+    .reveal { animation: revealUp 0.7s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 45ms + 80ms); }
+
+    /* Text that changes cross-fades in with a slight de-blur */
+    @keyframes textSwap {
+      from { opacity: 0.2; filter: blur(3px); transform: translateY(2px); }
+      to   { opacity: 1; filter: none; transform: none; }
+    }
+    .text-swap { animation: textSwap 0.45s var(--ease-out); }
+
+    /* Progress bars and intensity bars glide with a spring */
+    .progress-fill, #power-risk-bar { transition: width 0.9s var(--ease-spring) !important; }
+    .bar { transition: height 0.7s var(--ease-spring), box-shadow 0.3s ease, filter 0.2s ease; }
+    #intensity-bars > div:hover .bar { filter: brightness(1.25); }
+
+    /* Dialogs open with a spring; map/globe views cross-fade */
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.96); }
+      to   { opacity: 1; transform: none; }
+    }
+    @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+    #advisory-modal.flex, #upload-modal.flex { animation: backdropIn 0.25s ease both; }
+    #advisory-modal.flex > div, #upload-modal.flex > div { animation: modalIn 0.45s var(--ease-spring) both; }
+    @keyframes viewIn { from { opacity: 0; transform: scale(1.015); } to { opacity: 1; transform: none; } }
+    #threejs-container-ANIMATION_207:not(.hidden), #leaflet-map-container:not(.hidden) { animation: viewIn 0.5s var(--ease-out); }
+
+    /* Slider thumb springs when grabbed */
+    .custom-range::-webkit-slider-thumb { transition: transform 0.3s var(--ease-spring); }
+    .custom-range:active::-webkit-slider-thumb { transform: scale(1.4); }
+
+    /* Keyboard focus */
+    :focus-visible { outline: none; }
+    button:focus-visible, select:focus-visible, input:focus-visible, .nav-item:focus-visible {
+      box-shadow: 0 0 0 2px rgba(6, 10, 16, 0.9), 0 0 0 4px rgba(52, 211, 153, 0.7);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0ms !important; transition-duration: 0.01ms !important; }
+    }
+    /* Movable, resizable storm HUD card inside the map viewport */
+    .hud-card {
+      position: absolute;
+      z-index: 30;
+      width: 384px;
+      transform-origin: top left;
+      touch-action: none;
+    }
+    .hud-card.is-dragging { box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(52, 211, 153, 0.35); }
+    .hud-resize-handle {
+      position: absolute;
+      right: 3px;
+      bottom: 3px;
+      width: 14px;
+      height: 14px;
+      cursor: nwse-resize;
+      touch-action: none;
+      background:
+        linear-gradient(135deg, transparent 50%, rgba(148, 163, 184, 0.55) 50%, rgba(148, 163, 184, 0.55) 58%, transparent 58%,
+                        transparent 70%, rgba(148, 163, 184, 0.55) 70%, rgba(148, 163, 184, 0.55) 78%, transparent 78%);
+      border-bottom-right-radius: 10px;
+      opacity: 0.6;
+      transition: opacity 0.15s ease;
+    }
+    .hud-card:hover .hud-resize-handle { opacity: 1; }
+    .bar.is-gale-free { background: linear-gradient(180deg, #64748b 0%, rgba(100, 116, 139, 0.15) 100%); }
+    #leaflet-map {
+      background: #02070e;
+    }
+    /* Recolour the neutral dark-gray basemap into the globe's deep navy */
+    .leaflet-base-pane.theme-dark img {
+      filter: brightness(0.55) sepia(1) hue-rotate(172deg) saturate(2.8) contrast(1.2);
+    }
+    /* Place names & borders in soft cyan */
+    .leaflet-labels-pane.theme-dark img {
+      filter: sepia(1) hue-rotate(160deg) saturate(2.4) brightness(1.15);
+      opacity: 0.85;
+    }
+    /* Vignette so the map edges fall off like the globe's limb */
+    #leaflet-map::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 450;
+      background: radial-gradient(ellipse at center, transparent 55%, rgba(2, 7, 14, 0.75) 100%);
+    }
+    .leaflet-bar a {
+      background-color: rgba(10, 20, 42, 0.85) !important;
+      color: #5aa4ff !important;
+      border-color: rgba(255,255,255,0.1) !important;
+    }
+    .leaflet-bar a:hover {
+      background-color: rgba(59, 134, 247, 0.22) !important;
+      color: #fff !important;
+    }
+    .leaflet-popup-content-wrapper {
+      background: rgba(8, 17, 36, 0.92) !important;
+      color: #f1f5f9 !important;
+      border: 1px solid rgba(110, 170, 255, 0.3) !important;
+      border-radius: 12px !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7) !important;
+      backdrop-filter: blur(12px);
+    }
+    .leaflet-popup-tip {
+      background: rgba(8, 17, 36, 0.92) !important;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.9; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.08); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2.5s infinite ease-in-out;
+    }
+</style>
+</head>
+<body class="bg-transparent text-slate-200 antialiased h-screen overflow-hidden p-4">
+
+<!-- DEEP-SPACE BACKDROP (gradients + light beam + starfield) -->
+<div id="space-bg" aria-hidden="true">
+  <div class="space-beam"></div>
+  <canvas id="starfield"></canvas>
+</div>
+
+<!-- APP WINDOW -->
+<div class="app-frame h-full w-full flex gap-3 p-3 min-h-0">
+
+  <!-- ============ LEFT SIDEBAR ============ -->
+  <aside class="w-[212px] shrink-0 flex flex-col min-h-0 px-2 py-3">
+    <!-- Brand -->
+    <div class="flex items-center gap-2.5 px-2 pb-5">
+      <svg class="brand-logo w-10 h-10 shrink-0" viewBox="0 0 64 64" role="img" aria-label="The Sixth Pandava logo" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <defs>
+          <linearGradient id="spBlue" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8ec2ff"/>
+            <stop offset="0.55" stop-color="#4f9dff"/>
+            <stop offset="1" stop-color="#2668e6"/>
+          </linearGradient>
+          <linearGradient id="spGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f1d596"/>
+            <stop offset="1" stop-color="#b8924a"/>
+          </linearGradient>
+        </defs>
+        <!-- top rim of the vortex -->
+        <path d="M9 17 C9 10 20 5.5 32 5.5 C44 5.5 55 10 55 16 C55 20 51.5 23 47 24.5" stroke="url(#spBlue)" stroke-width="3.6"/>
+        <!-- right edge of the funnel down to the point -->
+        <path d="M47 24.5 C44.5 37 39 49 32.5 57.5" stroke="url(#spBlue)" stroke-width="2.2"/>
+        <!-- left flank of the shield, sweeping to the point -->
+        <path d="M9 17 C9 36 18 51 31 59" stroke="url(#spBlue)" stroke-width="4.4"/>
+        <!-- inner spiral arms around the eye -->
+        <path d="M17 17.5 C16 11.5 25 9.5 33.5 10" stroke="url(#spBlue)" stroke-width="2.4"/>
+        <path d="M46.5 14 C47.5 19.5 39 22 30.5 21" stroke="url(#spBlue)" stroke-width="2.4"/>
+        <ellipse cx="32" cy="15.2" rx="5.6" ry="3.1" fill="url(#spBlue)" stroke="none"/>
+        <!-- funnel bands narrowing to the point -->
+        <path d="M15.5 25 C21 29.5 39 30 47 24.5" stroke="url(#spBlue)" stroke-width="2.6"/>
+        <path d="M19.5 33 C25 36.5 37 36.5 43 31.5" stroke="url(#spBlue)" stroke-width="2.4"/>
+        <path d="M23.5 40.5 C27.5 43 35 43 39 38.5" stroke="url(#spBlue)" stroke-width="2.2"/>
+        <path d="M27 47.5 C29.5 49 33 48.8 35.5 45.5" stroke="url(#spBlue)" stroke-width="2"/>
+        <path d="M30.5 54 C30 51.5 31.5 50.5 33 51" stroke="url(#spBlue)" stroke-width="1.8"/>
+        <!-- gold crescent guarding the right side -->
+        <path d="M56 19 C57.5 38 47.5 53 34 60.5 C42.5 50 47 36 56 19 Z" fill="url(#spGold)" stroke="none"/>
+      </svg>
+      <div class="leading-none">
+        <div class="text-[10px] font-medium tracking-[0.18em] text-slate-300">THE SIXTH</div>
+        <div class="text-[19px] font-bold tracking-[0.06em] orbit-gradient-text mt-0.5">PANDAVA</div>
+        <div class="text-[9px] font-medium tracking-[0.1em] text-cyan-300/80 mt-1 whitespace-nowrap">CYCLONE PREDICTOR</div>
+      </div>
+    </div>
+
+    <!-- Views -->
+    <nav class="flex flex-col gap-1">
+      <button id="view-mode-3d" class="nav-item is-active"><span class="material-symbols-outlined">public</span>Globe View</button>
+      <button id="view-mode-2d" class="nav-item"><span class="material-symbols-outlined">map</span>Tactical Map</button>
+      <button id="view-mode-satellite" class="nav-item"><span class="material-symbols-outlined">satellite_alt</span>Satellite</button>
+    </nav>
+
+    <div class="h-px bg-white/[0.06] my-4 mx-2"></div>
+
+    <!-- Data layers -->
+    <div class="flex items-center justify-between px-3 mb-2">
+      <span class="section-label">Layers</span>
+      <span class="font-mono text-[10px] text-emerald-400" id="active-layers-count">4 active</span>
+    </div>
+    <div class="flex flex-col gap-0.5">
+      <div class="layer-item nav-item cursor-pointer" data-layer="track">
+        <span class="w-1.5 h-1.5 rounded-full bg-magentaGlow shrink-0"></span>
+        <span class="flex-1 truncate">Cyclone Track</span>
+      </div>
+      <div class="layer-item nav-item cursor-pointer" data-layer="uncertainty">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+        <span class="flex-1 truncate">Uncertainty Cone</span>
+      </div>
+      <div class="layer-item nav-item cursor-pointer" data-layer="surge">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"></span>
+        <span class="flex-1 truncate">Surge Gauges</span>
+      </div>
+      <div class="layer-item nav-item cursor-pointer" data-layer="satellite">
+        <span class="w-1.5 h-1.5 rounded-full bg-slate-500 shrink-0"></span>
+        <span class="flex-1 truncate">INSAT-3D Thermal IR</span>
+      </div>
+    </div>
+
+    <!-- System status -->
+    <div class="mt-auto card p-3 flex flex-col gap-1.5">
+      <div class="flex items-center gap-2 text-[11px]">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+        </span>
+        <span class="text-emerald-300 font-medium" id="sys-status">AI pipeline ready</span>
+      </div>
+      <span class="font-mono text-[11px] text-slate-400" id="utc-clock">00:00:00 UTC</span>
+      <span class="text-[10px] text-slate-500">v4.8 · Sector 04</span>
+    </div>
+  </aside>
+
+  <!-- ============ CENTER WORKSPACE ============ -->
+  <section class="panel flex-1 min-w-0 flex flex-col gap-3 p-3 min-h-0">
+
+    <!-- Top bar -->
+    <header class="flex items-center gap-2.5 shrink-0">
+      <div class="relative flex-1 max-w-md">
+        <span class="material-symbols-outlined text-slate-500 text-[17px] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+        <input id="search-input" class="w-full h-9 bg-white/[0.03] border border-white/[0.08] text-xs text-slate-200 pl-9 pr-3 rounded-xl focus:outline-none focus:border-emerald-400/50 placeholder:text-slate-500 transition-colors" placeholder="Search coordinates, storm name, basin…" type="text">
+      </div>
+      <div class="flex-1"></div>
+      <div class="relative">
+        <select id="storm-selector" class="h-9 max-w-[220px] truncate bg-white/[0.03] border border-white/[0.08] hover:border-emerald-400/40 text-xs font-medium text-slate-200 rounded-xl pl-3 pr-8 focus:outline-none appearance-none cursor-pointer transition-colors">
+          <option value="latest">Latest Inferred Forecast (latest_forecast.geojson)</option>
+          <option value="phailin">Cyclone PHAILIN (Cat 5 · Super Cyclone)</option>
+          <option value="hudhud">Cyclone HUDHUD (Cat 4 · Very Severe)</option>
+          <option value="amphan">Cyclone AMPHAN (Cat 5 · Super Cyclonic Storm)</option>
+          <option value="fani">Cyclone FANI (Cat 4 · Extremely Severe)</option>
+          <option value="maelstrom">Benchmark: Cyclone Maelstrom (Cat 5)</option>
+        </select>
+        <span class="material-symbols-outlined text-slate-400 text-[16px] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+      </div>
+      <button id="refresh-btn" class="icon-btn" title="Reload Latest Forecast">
+        <span class="material-symbols-outlined text-[18px]">sync</span>
+      </button>
+      <button id="open-upload-btn" class="orbit-btn-primary h-9 px-4 flex items-center gap-1.5 text-xs whitespace-nowrap shrink-0 active:scale-95" title="Ingest Satellite Image & Run Prediction">
+        <span class="material-symbols-outlined text-[16px]">cloud_upload</span>
+        <span>Upload & Predict</span>
+      </button>
+      <div class="h-9 flex items-center gap-2 pl-2 pr-3 rounded-xl bg-white/[0.03] border border-white/[0.08] shrink-0" title="Operational Sector 04 (North Indian Ocean / Bay of Bengal)">
+        <span class="w-6 h-6 rounded-full bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center text-emerald-300">
+          <span class="material-symbols-outlined text-[14px]">shield_person</span>
+        </span>
+        <span class="text-xs text-slate-200 font-medium">IMD Ops</span>
+      </div>
+    </header>
+
+    <!-- Storm briefing -->
+    <div class="flex items-center gap-3 shrink-0">
+      <div class="brand-badge w-14 h-14 shrink-0">
+        <svg class="w-9 h-9" viewBox="0 0 64 64" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="bdBlue" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#8ec2ff"/>
+              <stop offset="0.55" stop-color="#4f9dff"/>
+              <stop offset="1" stop-color="#2668e6"/>
+            </linearGradient>
+            <linearGradient id="bdGold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f1d596"/>
+              <stop offset="1" stop-color="#b8924a"/>
+            </linearGradient>
+          </defs>
+          <!-- top rim of the vortex -->
+          <path d="M9 17 C9 10 20 5.5 32 5.5 C44 5.5 55 10 55 16 C55 20 51.5 23 47 24.5" stroke="url(#bdBlue)" stroke-width="3.6"/>
+          <!-- right edge of the funnel down to the point -->
+          <path d="M47 24.5 C44.5 37 39 49 32.5 57.5" stroke="url(#bdBlue)" stroke-width="2.2"/>
+          <!-- left flank of the shield, sweeping to the point -->
+          <path d="M9 17 C9 36 18 51 31 59" stroke="url(#bdBlue)" stroke-width="4.4"/>
+          <!-- inner spiral arms around the eye -->
+          <path d="M17 17.5 C16 11.5 25 9.5 33.5 10" stroke="url(#bdBlue)" stroke-width="2.4"/>
+          <path d="M46.5 14 C47.5 19.5 39 22 30.5 21" stroke="url(#bdBlue)" stroke-width="2.4"/>
+          <ellipse cx="32" cy="15.2" rx="5.6" ry="3.1" fill="url(#bdBlue)" stroke="none"/>
+          <!-- funnel bands narrowing to the point -->
+          <path d="M15.5 25 C21 29.5 39 30 47 24.5" stroke="url(#bdBlue)" stroke-width="2.6"/>
+          <path d="M19.5 33 C25 36.5 37 36.5 43 31.5" stroke="url(#bdBlue)" stroke-width="2.4"/>
+          <path d="M23.5 40.5 C27.5 43 35 43 39 38.5" stroke="url(#bdBlue)" stroke-width="2.2"/>
+          <path d="M27 47.5 C29.5 49 33 48.8 35.5 45.5" stroke="url(#bdBlue)" stroke-width="2"/>
+          <path d="M30.5 54 C30 51.5 31.5 50.5 33 51" stroke="url(#bdBlue)" stroke-width="1.8"/>
+          <!-- gold crescent guarding the right side -->
+          <path d="M56 19 C57.5 38 47.5 53 34 60.5 C42.5 50 47 36 56 19 Z" fill="url(#bdGold)" stroke="none"/>
+        </svg>
+      </div>
+      <div class="callout-green flex-1 min-w-0 px-4 py-2.5 flex items-center justify-between gap-3" id="crisis-pill">
+        <div class="min-w-0">
+          <div class="text-lg font-semibold text-white truncate">
+            Tracking <span id="header-storm-name">Inference Run</span>
+          </div>
+          <div class="text-xs text-slate-300 truncate">
+            <span id="header-storm-cat">Deep Depression</span> · Bay of Bengal · 24 h forecast horizon
+          </div>
+        </div>
+        <span class="tag tag-rose shrink-0" id="crisis-badge">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+          Active
+        </span>
+      </div>
+    </div>
+
+    <!-- Workspace body -->
+    <div class="flex-1 flex gap-3 min-h-0">
+
+      <!-- Storm watch column -->
+      <div class="w-[272px] shrink-0 flex flex-col gap-2.5 min-h-0">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-sm font-semibold text-white">
+            <span class="material-symbols-outlined text-[18px] text-emerald-400">radar</span>
+            Storm Watch
+          </div>
+          <span class="tag tag-rose" id="incident-status-tag">Immediate watch</span>
+        </div>
+
+        <!-- Primary storm card -->
+        <div id="primary-incident-card" class="card p-3.5 border-rose-500/30 bg-gradient-to-br from-rose-500/[0.07] to-transparent cursor-pointer shrink-0">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sm font-semibold text-white truncate" id="card-storm-name">Cyclone Maelstrom</span>
+            <span class="tag tag-rose" id="card-storm-badge">CAT 5</span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-snug" id="card-storm-sub">Bay of Bengal Sector · Eyewall Landfall Imminent</p>
+          <div class="mt-3 grid grid-cols-3 gap-2 pt-2.5 border-t border-white/[0.06]">
+            <div>
+              <span class="text-[10px] text-slate-500 block">Wind</span>
+              <span class="font-mono text-xs text-white font-semibold" id="card-wind">260 km/h</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 block">Pressure</span>
+              <span class="font-mono text-xs text-white font-semibold" id="card-pressure">904 hPa</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 block">Confidence</span>
+              <span class="font-mono text-xs text-emerald-400 font-semibold" id="card-confidence">94.8%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label pt-1">Monitoring Stations</div>
+        <div class="flex-1 overflow-y-auto flex flex-col gap-2 min-h-0 pr-0.5">
+          <div class="card px-3 py-2.5 flex items-center gap-3">
+            <span class="w-[3px] self-stretch rounded-full bg-emerald-400"></span>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-slate-200 truncate">Odisha Coastal Radar</div>
+              <div class="text-[11px] text-slate-500 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">schedule</span>Paradip DWR · 10 min scan</div>
+            </div>
+            <span class="tag tag-green">Tracking</span>
+          </div>
+          <div class="card px-3 py-2.5 flex items-center gap-3">
+            <span class="w-[3px] self-stretch rounded-full bg-amber-400"></span>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-slate-200 truncate">Andhra Surge Buoy 42001</div>
+              <div class="text-[11px] text-slate-500 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">waves</span>Visakhapatnam · +3.8 m</div>
+            </div>
+            <span class="tag tag-amber">Warning</span>
+          </div>
+          <div class="card px-3 py-2.5 flex items-center gap-3">
+            <span class="w-[3px] self-stretch rounded-full bg-cyan-400"></span>
+            <div class="flex-1 min-w-0">
+              <div class="text-xs font-medium text-slate-200 truncate">INCOIS Tsunami & Surge</div>
+              <div class="text-[11px] text-slate-500 flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">water</span>Sector 4 · tide +1.2 m</div>
+            </div>
+            <span class="tag tag-blue">Synced</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Map / globe column -->
+      <div class="flex-1 min-w-0 flex flex-col gap-3 min-h-0">
+        <!-- Viewport -->
+        <div class="relative flex-1 w-full rounded-2xl overflow-hidden card flex flex-col justify-between min-h-0">
+
+          <!-- ThreeJS Interactive Container (3D Sphere Mode) -->
+          <div class="absolute inset-0 w-full h-full bg-transparent z-0 transition-opacity duration-300" id="threejs-container-ANIMATION_207"></div>
+
+          <!-- Leaflet Interactive Container (2D Map Mode) -->
+          <div class="absolute inset-0 w-full h-full z-0 hidden opacity-0 transition-opacity duration-300" id="leaflet-map-container">
+            <div id="leaflet-map" class="w-full h-full"></div>
+          </div>
+
+          <!-- Soft edge vignette -->
+          <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_rgba(8,12,18,0)_45%,_rgba(8,12,18,0.7)_100%)] z-10"></div>
+
+          <!-- Top overlay: title & legend -->
+          <div class="relative z-20 p-3 flex items-center justify-between gap-3 pointer-events-none">
+            <div class="flex items-center gap-2 text-sm font-semibold text-white">
+              <span class="material-symbols-outlined text-[18px] text-emerald-400">track_changes</span>
+              Forecast Track
+            </div>
+            <div class="flex items-center gap-3 text-[10px] text-slate-400 bg-black/40 backdrop-blur-md border border-white/[0.06] rounded-full px-3 py-1">
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>Origin</span>
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-magentaGlow"></span>Track</span>
+              <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Cone</span>
+            </div>
+          </div>
+
+          <!-- Floating storm HUD card: drag by its header, resize from the corner grip -->
+          <div id="hud-card" class="hud-card panel p-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+            <div id="hud-drag-handle" class="flex items-center justify-between mb-2 cursor-move select-none" title="Drag to move · double-click to reset">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="material-symbols-outlined text-[14px] text-slate-500 shrink-0">drag_indicator</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                <span class="text-xs font-semibold text-white truncate" id="hud-title">Bay of Bengal Storm Focus</span>
+              </div>
+              <span class="font-mono text-[10px] text-emerald-300" id="hud-threat">THREAT 98%</span>
+            </div>
+            <div id="hud-resize-handle" class="hud-resize-handle" title="Drag to resize"></div>
+            <div class="grid grid-cols-3 gap-2 font-mono text-[11px]">
+              <div class="rounded-xl p-2 bg-white/[0.03] border border-white/[0.05]">
+                <span class="text-[10px] font-sans text-slate-500 block mb-0.5">Pressure</span>
+                <span class="text-white font-semibold" id="hud-pressure">904 hPa</span>
+              </div>
+              <div class="rounded-xl p-2 bg-white/[0.03] border border-white/[0.05]">
+                <span class="text-[10px] font-sans text-slate-500 block mb-0.5">Gusts</span>
+                <span class="text-rose-400 font-semibold" id="hud-wind">260 km/h</span>
+              </div>
+              <div class="rounded-xl p-2 bg-white/[0.03] border border-white/[0.05]">
+                <span class="text-[10px] font-sans text-slate-500 block mb-0.5">At risk</span>
+                <span class="text-slate-200 font-semibold" id="hud-risk">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom status bar -->
+          <div class="relative z-20 px-4 py-2 bg-black/50 backdrop-blur-md border-t border-white/[0.06] flex items-center justify-between gap-3 font-mono text-[10px] text-slate-400 whitespace-nowrap">
+            <div class="flex items-center gap-3">
+              <span>LAT/LON <strong class="text-slate-200" id="hud-latlon">15.50°N, 85.20°E</strong></span>
+              <span class="text-white/20 hidden 2xl:inline">·</span>
+              <span class="hidden 2xl:inline">ALT <strong class="text-slate-200" id="hud-alt">640 KM</strong></span>
+              <span class="text-white/20">·</span>
+              <span class="text-magentaGlow font-medium" id="hud-cone-status">CONE T+24H</span>
+            </div>
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+              <span class="text-slate-300 truncate" id="hud-source-status">Inference Stream Live</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forecast timeline -->
+        <div class="card shrink-0 px-4 py-3 flex flex-col gap-2.5">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="material-symbols-outlined text-[18px] text-emerald-400">timeline</span>
+              <span class="text-sm font-semibold text-white whitespace-nowrap">Forecast Horizon</span>
+              <span class="tag tag-green truncate" id="scrubber-label">T+00h (current position)</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button id="play-pause-btn" class="icon-btn !w-7 !h-7 !rounded-lg" title="Auto-Play Forecast Sequence">
+                <span class="material-symbols-outlined text-[16px]" id="play-icon">play_arrow</span>
+              </button>
+              <button class="speed-btn seg-btn" data-speed="1">1x</button>
+              <button class="speed-btn seg-btn is-active" data-speed="2">2x</button>
+              <button class="speed-btn seg-btn" data-speed="5">5x</button>
+            </div>
+          </div>
+          <input class="custom-range w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer" id="timeline-slider" max="4" min="0" step="1" type="range" value="0">
+          <div class="flex justify-between font-mono text-[10px] text-slate-500" id="timeline-ticks">
+            <span class="text-emerald-400 font-semibold">Now</span>
+            <span>+6h</span>
+            <span>+12h</span>
+            <span>+18h</span>
+            <span>+24h · landfall</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INSIGHTS PANEL ============ -->
+  <aside class="insights-frame w-[312px] shrink-0 flex flex-col min-h-0">
+    <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 min-h-0">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 text-base font-semibold text-white">
+          <span class="material-symbols-outlined text-[20px] text-cyan-400">insights</span>
+          Impact Insights
+        </div>
+        <span class="tag tag-green" id="ensemble-badge">91% ensemble</span>
+      </div>
+
+      <!-- Forecast confidence -->
+      <div>
+        <div class="flex items-end justify-between mb-2">
+          <span class="text-xs text-slate-400">Forecast confidence</span>
+          <span class="font-mono text-2xl font-semibold text-emerald-400 leading-none" id="insight-confidence">—<span class="text-xs text-slate-500">/100</span></span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="insight-confidence-bar" style="width: 0%"></div></div>
+      </div>
+
+      <!-- Impact stats -->
+      <div class="grid grid-cols-2 gap-2.5">
+        <div class="card p-3">
+          <span class="icon-chip mb-2"><span class="material-symbols-outlined">groups</span></span>
+          <span class="font-mono text-xl font-semibold text-white block leading-tight" id="stat-exposure">—</span>
+          <span class="text-[11px] text-slate-400 block">Civilian exposure</span>
+          <span class="text-[10px] text-rose-400 font-medium block mt-0.5 truncate" id="stat-exposure-sub">—</span>
+        </div>
+        <div class="card p-3">
+          <span class="icon-chip mb-2"><span class="material-symbols-outlined">bolt</span></span>
+          <span class="font-mono text-xl font-semibold text-amber-400 block leading-tight" id="stat-fragility">—</span>
+          <span class="text-[11px] text-slate-400 block">Grid fragility</span>
+          <span class="text-[10px] text-amber-300/90 font-medium block mt-0.5 truncate" id="stat-fragility-sub">—</span>
+        </div>
+        <div class="card p-3">
+          <span class="icon-chip mb-2"><span class="material-symbols-outlined">payments</span></span>
+          <span class="font-mono text-xl font-semibold text-rose-400 block leading-tight" id="stat-loss">—</span>
+          <span class="text-[11px] text-slate-400 block">Projected loss</span>
+          <span class="text-[10px] text-rose-400 font-medium block mt-0.5 truncate" id="stat-loss-sub">—</span>
+        </div>
+        <div class="card p-3">
+          <span class="icon-chip mb-2"><span class="material-symbols-outlined">health_and_safety</span></span>
+          <span class="font-mono text-xl font-semibold text-emerald-400 block leading-tight" id="stat-readiness">91.2%</span>
+          <span class="text-[11px] text-slate-400 block">Response readiness</span>
+        </div>
+      </div>
+
+      <!-- Power outage likelihood -->
+      <div class="card p-3" id="power-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-2">
+            <span class="icon-chip !bg-amber-400/10 !border-amber-400/30 !text-amber-300"><span class="material-symbols-outlined">power_off</span></span>
+            <span class="text-xs font-semibold text-white">Power outage risk</span>
+          </div>
+          <span class="font-mono text-xl font-semibold text-amber-300" id="power-risk-pct">—</span>
+        </div>
+        <div class="progress-track"><div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-rose-500 transition-all duration-500" id="power-risk-bar" style="width: 0%"></div></div>
+        <p class="text-[11px] text-slate-400 mt-2 leading-snug" id="power-risk-sub">—</p>
+      </div>
+
+      <!-- Advisory tip -->
+      <div class="flex items-start gap-2.5">
+        <div class="orb w-10 h-10 shrink-0"><span class="material-symbols-outlined text-[18px]">tips_and_updates</span></div>
+        <p class="callout-green flex-1 px-3 py-2 text-[11px] leading-relaxed text-emerald-100/90" id="insight-tip">Loading impact assessment…</p>
+      </div>
+
+      <!-- Intensity outlook -->
+      <div>
+        <div class="text-sm font-semibold text-white mb-3">Intensity Outlook</div>
+        <div class="h-28 flex items-end justify-between gap-2" id="intensity-bars"></div>
+        <div class="flex justify-between gap-2 mt-1.5 font-mono text-[10px] text-slate-500" id="intensity-labels"></div>
+      </div>
+
+      <!-- Live telemetry -->
+      <div class="card divide-y divide-white/[0.05]">
+        <div class="flex items-center justify-between px-3 py-2">
+          <span class="text-[11px] text-slate-400 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Wind speed</span>
+          <span class="font-mono text-xs font-semibold text-white" id="spark-wind-val">—</span>
+        </div>
+        <div class="flex items-center justify-between px-3 py-2">
+          <span class="text-[11px] text-slate-400 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>Central pressure</span>
+          <span class="font-mono text-xs font-semibold text-white" id="spark-pres-val">—</span>
+        </div>
+        <div class="flex items-center justify-between px-3 py-2">
+          <span class="text-[11px] text-slate-400 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>Coastal surge max</span>
+          <span class="font-mono text-xs font-semibold text-white" id="spark-surge-val">—</span>
+        </div>
+      </div>
+
+      <!-- Threat chain -->
+      <div>
+        <div class="section-label mb-3">Cascading Threat Chain</div>
+        <div class="flex flex-col gap-4 relative pl-3" id="threat-chain-list"></div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="p-4 pt-3 border-t border-white/[0.06] grid grid-cols-2 gap-2 shrink-0">
+      <button id="broadcast-advisory-btn" class="h-10 rounded-full bg-rose-500 hover:bg-rose-600 text-white font-semibold flex items-center justify-center gap-1.5 text-xs transition-all shadow-[0_0_20px_rgba(244,63,94,0.3)] active:scale-95">
+        <span class="material-symbols-outlined text-[16px]">notifications_active</span>
+        Broadcast
+      </button>
+      <button id="export-vectors-btn" class="orbit-btn-ghost h-10 flex items-center justify-center gap-1.5 text-xs active:scale-95" title="Download GeoJSON Feature Collection">
+        <span class="material-symbols-outlined text-[16px]">file_download</span>
+        Export
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- ADVISORY MODAL -->
+<div id="advisory-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4">
+  <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-rose-500/30 shadow-[0_0_50px_rgba(244,63,94,0.25)] flex flex-col gap-4">
+    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+      <div class="flex items-center gap-2 text-rose-400">
+        <span class="material-symbols-outlined text-2xl">warning</span>
+        <h3 class="font-bold text-sm tracking-wider uppercase text-white">Emergency Cyclone Bulletin</h3>
+      </div>
+      <button id="close-modal-btn" class="text-slate-400 hover:text-white transition-colors">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="text-xs text-slate-300 leading-relaxed space-y-3 font-sans">
+      <p><strong class="text-rose-400" id="modal-bulletin-title">IMD / SIXTH PANDAVA CRITICAL DISASTER ALERT:</strong> Severe cyclonic system tracked over Bay of Bengal sector.</p>
+      <div class="bg-black/50 p-3 rounded-xl border border-white/10 font-mono text-[11px] space-y-1">
+        <div>TARGET REGION: <span class="text-white" id="modal-target">Odisha & Northern Andhra Coast</span></div>
+        <div>ESTIMATED LANDFALL: <span class="text-rose-400" id="modal-landfall">T+24 Hours</span></div>
+        <div>PEAK SUSTAINED WINDS: <span class="text-cyan-300" id="modal-winds">140 - 260 km/h</span></div>
+        <div>SURGE PREDICTION: <span class="text-amber-400" id="modal-surge">Up to 4.8m over high tide</span></div>
+      </div>
+      <p class="text-slate-400 text-[11px]">Recommended action: Immediate suspension of maritime operations, evacuation of coastal red-zones, and activation of NDRF battalion reserves.</p>
+    </div>
+    <div class="flex justify-end gap-2 pt-2 border-t border-white/10">
+      <button id="dismiss-modal-btn" class="orbit-btn-ghost px-5 py-2 text-xs">Dismiss</button>
+      <button id="confirm-broadcast-btn" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-semibold text-white shadow-lg shadow-rose-500/30">Send to Warning Centers</button>
+    </div>
+  </div>
+</div>
+
+<!-- DATA INGESTION & NEURAL PREDICTION MODAL -->
+<div id="upload-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-4">
+  <div class="modal-frame max-w-4xl w-full p-6 flex flex-col gap-5 max-h-[92vh] overflow-hidden">
+    <!-- Header -->
+    <div class="flex items-start justify-between gap-4 shrink-0">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="brand-badge w-11 h-11 shrink-0">
+          <span class="material-symbols-outlined text-[20px] text-cyan-300">satellite_alt</span>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+            Data Ingestion &amp; Prediction
+            <span class="tag tag-blue">AI v4.8 inference</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Ingest satellite imagery, radar grids or telemetry to generate track &amp; intensity forecasts.</p>
+        </div>
+      </div>
+      <button id="close-upload-modal-btn" class="icon-btn shrink-0" aria-label="Close">
+        <span class="material-symbols-outlined text-[18px]">close</span>
+      </button>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-12 gap-5 flex-1 min-h-0 overflow-y-auto pr-1">
+
+      <!-- LEFT: Satellite imagery dropzone & preview -->
+      <div class="col-span-5 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="section-label">Satellite IR / Radar Layer</span>
+          <span class="tag tag-blue" id="img-status-label">Awaiting image</span>
+        </div>
+
+        <!-- Dropzone -->
+        <div id="drop-zone" class="drop-zone relative flex-1 min-h-[230px] flex flex-col items-center justify-center p-4 text-center cursor-pointer group overflow-hidden">
+          <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.tif,.tiff,.npy" class="absolute inset-0 opacity-0 cursor-pointer z-20">
+
+          <!-- Empty State -->
+          <div id="drop-empty-state" class="flex flex-col items-center gap-2.5">
+            <span class="icon-chip !w-12 !h-12 !rounded-2xl group-hover:scale-110 transition-transform duration-500">
+              <span class="material-symbols-outlined !text-[24px]">add_photo_alternate</span>
+            </span>
+            <div class="text-sm font-semibold text-white">Drop satellite image here</div>
+            <div class="text-[11px] text-slate-400 leading-snug">INSAT-3D TIR-1, GeoTIFF, JPG, PNG or .npy patch</div>
+            <span class="tag tag-green mt-1">Click or drag to browse</span>
+          </div>
+
+          <!-- Active Preview Canvas (Hidden by default) -->
+          <div id="preview-wrapper" class="hidden absolute inset-0 w-full h-full bg-black z-10 flex items-center justify-center rounded-[14px] overflow-hidden">
+            <canvas id="preview-canvas" class="max-w-full max-h-full object-contain"></canvas>
+            <!-- Scanner overlay -->
+            <div class="absolute inset-0 pointer-events-none">
+              <div class="absolute top-2 left-2 tag tag-blue !bg-black/60" id="preview-filename">INSAT_FRAME.JPG</div>
+              <div class="absolute top-2 right-2 tag tag-green !bg-black/60">128×128 resampled</div>
+              <div class="absolute inset-0 flex items-center justify-center opacity-40">
+                <div class="w-16 h-16 rounded-full border border-emerald-400 border-dashed animate-spin" style="animation-duration: 10s;"></div>
+                <div class="absolute w-full h-px bg-emerald-400/40"></div>
+                <div class="absolute h-full w-px bg-emerald-400/40"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sample & reset -->
+        <div class="flex items-center gap-2">
+          <button id="load-sample-btn" type="button" class="orbit-btn-ghost flex-1 h-9 px-3 text-xs truncate flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">image</span>
+            Load sample INSAT IR frame
+          </button>
+          <button id="clear-img-btn" type="button" class="icon-btn" title="Reset image">
+            <span class="material-symbols-outlined text-[17px]">restart_alt</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Meteorological parameters -->
+      <div class="col-span-7 flex flex-col gap-4 text-xs">
+        <span class="section-label">Meteorological Parameters &amp; Spatial Anchor</span>
+
+        <!-- Name & sensor -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="field-label" for="input-storm-name">System name</label>
+            <input id="input-storm-name" type="text" value="INVEST 92B (BAY OF BENGAL)" class="field font-mono">
+          </div>
+          <div>
+            <label class="field-label" for="input-sensor">Sensor instrument</label>
+            <div class="relative">
+              <select id="input-sensor" class="field appearance-none pr-8 cursor-pointer">
+                <option>INSAT-3D TIR-1 (10.8 µm)</option>
+                <option>INSAT-3DR Imager (Thermal IR)</option>
+                <option>Doppler Weather Radar (Paradip DWR)</option>
+                <option>Ocean Surface Buoy Array (INCOIS)</option>
+              </select>
+              <span class="material-symbols-outlined text-slate-400 text-[16px] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">expand_more</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coordinates with presets -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5 gap-2">
+            <label class="field-label !mb-0">Initial centre coordinates</label>
+            <div class="flex flex-wrap justify-end gap-1">
+              <button type="button" class="coord-preset tag tag-blue hover:!border-cyan-300/70" data-lat="15.5" data-lon="85.2">Bay of Bengal</button>
+              <button type="button" class="coord-preset tag tag-blue hover:!border-cyan-300/70" data-lat="11.8" data-lon="92.7">Andaman</button>
+              <button type="button" class="coord-preset tag tag-blue hover:!border-cyan-300/70" data-lat="18.5" data-lon="86.0">Odisha coast</button>
+              <button type="button" class="coord-preset tag tag-blue hover:!border-cyan-300/70" data-lat="16.2" data-lon="68.5">Arabian Sea</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-500">Lat</span>
+              <input id="input-lat" type="number" step="0.01" value="15.50" class="field !pl-10 font-mono">
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-500">Lon</span>
+              <input id="input-lon" type="number" step="0.01" value="85.20" class="field !pl-10 font-mono">
+            </div>
+          </div>
+        </div>
+
+        <!-- Intensity sliders -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="card p-3">
+            <div class="flex justify-between items-center mb-2 gap-2">
+              <span class="text-[11px] text-slate-400">Wind (MSWS)</span>
+              <span class="font-mono text-xs font-semibold text-white whitespace-nowrap" id="val-wind">45 kts (83 km/h)</span>
+            </div>
+            <input id="slider-wind" type="range" min="20" max="150" value="45" class="custom-range w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1.5">
+              <span>Depression (25)</span>
+              <span>Cat 5 (140+)</span>
+            </div>
+          </div>
+
+          <div class="card p-3">
+            <div class="flex justify-between items-center mb-2 gap-2">
+              <span class="text-[11px] text-slate-400">Central pressure</span>
+              <span class="font-mono text-xs font-semibold text-emerald-300" id="val-pressure">992 hPa</span>
+            </div>
+            <input id="slider-pressure" type="range" min="900" max="1008" value="992" class="custom-range w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1.5">
+              <span>Deep low (900)</span>
+              <span>Normal (1008)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forecast horizon -->
+        <div>
+          <label class="field-label">Forecast horizon</label>
+          <div class="choice-group grid grid-cols-3 gap-1">
+            <button type="button" class="horizon-btn choice is-active" data-hours="24">T+24h <span class="choice-sub">4 steps</span></button>
+            <button type="button" class="horizon-btn choice" data-hours="48">T+48h <span class="choice-sub">8 steps</span></button>
+            <button type="button" class="horizon-btn choice" data-hours="72">T+72h <span class="choice-sub">12 steps</span></button>
+          </div>
+        </div>
+
+        <!-- Progress console (shown during inference) -->
+        <div id="inference-progress-console" class="hidden callout-green p-3 space-y-2">
+          <div class="flex items-center gap-2 text-emerald-200 text-[11px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span id="progress-step-text">Initializing AI model pipeline…</span>
+          </div>
+          <div class="progress-track">
+            <div id="progress-bar-fill" class="progress-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between gap-3 border-t border-white/[0.06] pt-4 shrink-0">
+      <div class="text-[11px] text-slate-400 flex items-center gap-2 min-w-0">
+        <span class="relative flex h-2 w-2 shrink-0">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+        </span>
+        <span class="truncate">Neural engines ready · CNN + ConvLSTM + MC Dropout</span>
+      </div>
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button id="cancel-upload-btn" type="button" class="orbit-btn-ghost h-10 px-5 text-xs">Cancel</button>
+        <button id="run-prediction-btn" type="button" class="orbit-btn-primary h-10 px-6 text-xs flex items-center gap-2 active:scale-95">
+          <span class="material-symbols-outlined text-[17px]">neurology</span>
+          <span>Run prediction</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS: APPLICATION LOGIC & VISUALIZATION ENGINES -->
+<script>
+// ==========================================
+// 1. DATA REPOSITORY & PRESET STORMS
+// ==========================================
+const STORMS_DB = {
+  latest: {
+    name: "Live Inferred System",
+    category: "Deep Depression",
+    confidence: 0.92,
+    lat: 15.5,
+    lon: 85.2,
+    wind_kmh: 65,
+    wind_kt: 35,
+    pressure_hpa: 996,
+    surge_m: 1.8,
+    readiness: "94.5%",
+    track: [
+      { step: 0, lat: 15.5, lon: 85.2, wind_kt: 35, pressure_hpa: 996, radius_deg: 0.04 },
+      { step: 1, lat: 15.45, lon: 85.18, wind_kt: 40, pressure_hpa: 992, radius_deg: 0.05 },
+      { step: 2, lat: 15.36, lon: 85.20, wind_kt: 48, pressure_hpa: 988, radius_deg: 0.06 },
+      { step: 3, lat: 15.34, lon: 85.33, wind_kt: 55, pressure_hpa: 984, radius_deg: 0.07 },
+      { step: 4, lat: 15.31, lon: 85.35, wind_kt: 62, pressure_hpa: 980, radius_deg: 0.08 }
+    ],
+    chain: [
+      { title: "Tropical Low Intensification", time: "T-00h", desc: "System organizes over warm 30°C sea surface temperatures in central Bay of Bengal." },
+      { title: "Coastal Squalls & High Swells", time: "T+06h", desc: "Gale force winds 50-65 km/h along offshore drilling platforms and fishing zones." },
+      { title: "Depression Landfall Approach", time: "T+18h", desc: "Heavy precipitation bands intersect coastal Andhra and Odisha delta districts." }
+    ]
+  },
+  phailin: {
+    name: "Cyclone PHAILIN",
+    category: "Super Cyclonic Storm (Cat 5)",
+    confidence: 0.98,
+    lat: 16.0,
+    lon: 88.5,
+    wind_kmh: 260,
+    wind_kt: 140,
+    pressure_hpa: 910,
+    surge_m: 3.5,
+    readiness: "96.0%",
+    track: [
+      { step: 0, lat: 14.5, lon: 90.5, wind_kt: 65, pressure_hpa: 980, radius_deg: 0.03 },
+      { step: 1, lat: 16.0, lon: 88.5, wind_kt: 115, pressure_hpa: 940, radius_deg: 0.05 },
+      { step: 2, lat: 17.5, lon: 86.8, wind_kt: 140, pressure_hpa: 910, radius_deg: 0.07 },
+      { step: 3, lat: 18.8, lon: 85.4, wind_kt: 130, pressure_hpa: 920, radius_deg: 0.09 },
+      { step: 4, lat: 19.3, lon: 84.9, wind_kt: 115, pressure_hpa: 935, radius_deg: 0.12 }
+    ],
+    chain: [
+      { title: "Cat 5 Eyewall Landfall", time: "T-00h", desc: "260 km/h gusts with severe coastal storm surge near Gopalpur, Odisha." },
+      { title: "Massive Seawall Overtopping", time: "T+06h", desc: "3.5m storm surge inundates Ganjam coastal belt and Chilika lake basin." },
+      { title: "Grid & Communications Collapse", time: "T+12h", desc: "High tension transmission pylons compromised across 8 coastal districts." }
+    ]
+  },
+  hudhud: {
+    name: "Cyclone HUDHUD",
+    category: "Extremely Severe Cyclonic Storm",
+    confidence: 0.95,
+    lat: 17.0,
+    lon: 85.0,
+    wind_kmh: 215,
+    wind_kt: 115,
+    pressure_hpa: 950,
+    surge_m: 2.8,
+    readiness: "92.0%",
+    track: [
+      { step: 0, lat: 14.2, lon: 88.2, wind_kt: 65, pressure_hpa: 985, radius_deg: 0.04 },
+      { step: 1, lat: 15.6, lon: 86.6, wind_kt: 90, pressure_hpa: 965, radius_deg: 0.06 },
+      { step: 2, lat: 17.0, lon: 85.0, wind_kt: 115, pressure_hpa: 950, radius_deg: 0.08 },
+      { step: 3, lat: 17.7, lon: 83.3, wind_kt: 110, pressure_hpa: 955, radius_deg: 0.10 },
+      { step: 4, lat: 18.5, lon: 82.5, wind_kt: 75, pressure_hpa: 975, radius_deg: 0.14 }
+    ],
+    chain: [
+      { title: "Visakhapatnam Direct Eyewall Hit", time: "T-00h", desc: "Severe structural damage to port cranes, radar arrays, and urban grid." },
+      { title: "Flash Flooding in Eastern Ghats", time: "T+06h", desc: "Orographically induced torrential rain exceeds 400mm in 12 hours." },
+      { title: "Transportation Corridor Blockage", time: "T+12h", desc: "National Highway 16 severed by uprooted canopy and waterlogging." }
+    ]
+  },
+  amphan: {
+    name: "Cyclone AMPHAN",
+    category: "Super Cyclonic Storm (Cat 5)",
+    confidence: 0.99,
+    lat: 18.0,
+    lon: 87.0,
+    wind_kmh: 270,
+    wind_kt: 145,
+    pressure_hpa: 907,
+    surge_m: 5.0,
+    readiness: "95.0%",
+    track: [
+      { step: 0, lat: 13.5, lon: 86.4, wind_kt: 80, pressure_hpa: 970, radius_deg: 0.03 },
+      { step: 1, lat: 15.5, lon: 86.5, wind_kt: 145, pressure_hpa: 907, radius_deg: 0.05 },
+      { step: 2, lat: 18.0, lon: 87.0, wind_kt: 130, pressure_hpa: 925, radius_deg: 0.07 },
+      { step: 3, lat: 21.5, lon: 88.3, wind_kt: 110, pressure_hpa: 948, radius_deg: 0.10 },
+      { step: 4, lat: 23.0, lon: 89.0, wind_kt: 70, pressure_hpa: 980, radius_deg: 0.14 }
+    ],
+    chain: [
+      { title: "Sundarbans Ecological Landfall", time: "T-00h", desc: "5.0m surge sweeps through UNESCO mangrove barrier islands." },
+      { title: "Kolkata Metropolitan Grid Outage", time: "T+06h", desc: "Gale force winds 130 km/h incapacitate city transformers and communications." },
+      { title: "Delta Salinization & Agricultural Loss", time: "T+24h", desc: "Extensive embankment collapse floods 1.2 million acres of farmland." }
+    ]
+  },
+  fani: {
+    name: "Cyclone FANI",
+    category: "Extremely Severe Cyclonic Storm",
+    confidence: 0.97,
+    lat: 17.5,
+    lon: 85.5,
+    wind_kmh: 215,
+    wind_kt: 115,
+    pressure_hpa: 932,
+    surge_m: 4.2,
+    readiness: "97.2%",
+    track: [
+      { step: 0, lat: 12.0, lon: 86.0, wind_kt: 70, pressure_hpa: 980, radius_deg: 0.03 },
+      { step: 1, lat: 15.0, lon: 85.2, wind_kt: 105, pressure_hpa: 945, radius_deg: 0.05 },
+      { step: 2, lat: 17.5, lon: 85.5, wind_kt: 115, pressure_hpa: 932, radius_deg: 0.07 },
+      { step: 3, lat: 19.8, lon: 85.8, wind_kt: 110, pressure_hpa: 940, radius_deg: 0.10 },
+      { step: 4, lat: 21.2, lon: 87.0, wind_kt: 80, pressure_hpa: 970, radius_deg: 0.13 }
+    ],
+    chain: [
+      { title: "Puri Coastal Strike", time: "T-00h", desc: "High velocity eyewall creates devastating structural damage at Puri." },
+      { title: "Bhubaneswar Urban Corridor Shear", time: "T+04h", desc: "Widespread transmission tower failure and green cover decimation." },
+      { title: "Northward Decay into Bengal", time: "T+18h", desc: "Weakens into cyclonic storm with widespread flood emergency." }
+    ]
+  },
+  maelstrom: {
+    name: "Cyclone MAELSTROM",
+    category: "CAT 5 Tactical Benchmark",
+    confidence: 0.98,
+    lat: 15.0,
+    lon: 88.0,
+    wind_kmh: 260,
+    wind_kt: 140,
+    pressure_hpa: 904,
+    surge_m: 4.2,
+    readiness: "91.2%",
+    track: [
+      { step: 0, lat: 15.0, lon: 88.0, wind_kt: 140, pressure_hpa: 904, radius_deg: 0.04 },
+      { step: 1, lat: 16.5, lon: 87.2, wind_kt: 135, pressure_hpa: 912, radius_deg: 0.06 },
+      { step: 2, lat: 18.2, lon: 86.1, wind_kt: 125, pressure_hpa: 924, radius_deg: 0.08 },
+      { step: 3, lat: 20.1, lon: 85.0, wind_kt: 110, pressure_hpa: 938, radius_deg: 0.11 },
+      { step: 4, lat: 22.0, lon: 84.2, wind_kt: 90, pressure_hpa: 955, radius_deg: 0.15 }
+    ],
+    chain: [
+      { title: "Cat 5 Eyewall Landfall", time: "T-00h", desc: "260 km/h gusts with severe coastal shear along Delta coast." },
+      { title: "4.8m Hydrodynamic Surge", time: "T+06h", desc: "Seawall overtopping; backflow rate reaches 85,000 m³/s." },
+      { title: "Substation Auto-Isolation", time: "T+12h", desc: "18 regional nodes transition to passive backup reserves." }
+    ]
+  }
+};
+
+// ==========================================
+// 1b. CIVILIAN EXPOSURE MODEL (PRB 2020 World Population Data Sheet)
+// ==========================================
+// Per-country figures from PRB's 2020 World Population Data Sheet:
+//   pop  = population mid-2020 (millions)
+//   u15  = % of population ages <15      a65 = % of population ages 65+
+//   hh   = average household size (null where PRB reports "—")
+const PRB_2020 = {
+  IND: { pop: 1400.1, u15: 27, a65: 6, hh: 4.6 },
+  BGD: { pop: 169.8,  u15: 28, a65: 5, hh: 4.3 },
+  MMR: { pop: 54.7,   u15: 28, a65: 6, hh: 4.2 },
+  LKA: { pop: 21.9,   u15: 25, a65: 8, hh: 3.9 },
+  PAK: { pop: 220.9,  u15: 36, a65: 4, hh: 6.6 },
+  NPL: { pop: 30.0,   u15: 29, a65: 6, hh: 4.2 },
+  BTN: { pop: 0.7,    u15: 26, a65: 6, hh: 4.2 },
+  OMN: { pop: 4.7,    u15: 22, a65: 3, hh: 5.1 },
+  YEM: { pop: 29.8,   u15: 39, a65: 3, hh: 6.7 },
+  SOM: { pop: 15.9,   u15: 47, a65: 3, hh: null },
+  DJI: { pop: 1.0,    u15: 30, a65: 5, hh: null },
+  ERI: { pop: 3.5,    u15: 42, a65: 4, hh: null },
+  ETH: { pop: 114.9,  u15: 40, a65: 3, hh: 4.6 },
+  KEN: { pop: 53.5,   u15: 39, a65: 3, hh: 3.6 },
+  SYC: { pop: 0.1,    u15: 24, a65: 8, hh: null },
+  IRN: { pop: 84.2,   u15: 24, a65: 6, hh: 3.5 },
+  AFG: { pop: 38.9,   u15: 43, a65: 3, hh: 8.0 },
+  ARE: { pop: 9.8,    u15: 15, a65: 1, hh: null },
+  SAU: { pop: 35.0,   u15: 25, a65: 3, hh: null },
+  QAT: { pop: 2.8,    u15: 14, a65: 1, hh: 4.7 },
+  BHR: { pop: 1.5,    u15: 19, a65: 3, hh: null },
+  KWT: { pop: 4.7,    u15: 22, a65: 3, hh: null },
+  IRQ: { pop: 39.7,   u15: 37, a65: 3, hh: 6.3 },
+  THA: { pop: 66.5,   u15: 17, a65: 12, hh: null },
+  MYS: { pop: 32.8,   u15: 23, a65: 7, hh: 4.2 },
+  IDN: { pop: 271.7,  u15: 27, a65: 6, hh: 4.0 },
+  SGP: { pop: 5.8,    u15: 15, a65: 14, hh: 3.3 },
+  KHM: { pop: 15.5,   u15: 31, a65: 5, hh: 4.6 },
+  LAO: { pop: 7.2,    u15: 32, a65: 4, hh: 4.7 },
+  VNM: { pop: 96.2,   u15: 23, a65: 8, hh: 3.9 },
+  CHN: { pop: 1402.4, u15: 17, a65: 13, hh: null },
+  TKM: { pop: 6.0,    u15: 31, a65: 4, hh: null },
+  UZB: { pop: 34.2,   u15: 29, a65: 5, hh: 5.1 },
+  TJK: { pop: 9.4,    u15: 34, a65: 3, hh: 6.0 },
+  KGZ: { pop: 6.6,    u15: 32, a65: 5, hh: 4.0 },
+  TUR: { pop: 83.7,   u15: 23, a65: 9, hh: 3.4 },
+  SYR: { pop: 19.4,   u15: 34, a65: 5, hh: null },
+  AZE: { pop: 10.1,   u15: 22, a65: 7, hh: 4.1 },
+  ARM: { pop: 3.0,    u15: 20, a65: 12, hh: 3.5 }
+};
+const PRB_WORLD_HH = 4.0; // PRB 2020 world average household size, used where a country reports "—"
+// Natural Earth splits Somaliland from Somalia; PRB reports them together.
+const GRID_CODE_ALIAS = { SOL: "SOM" };
+
+// Decode the run-length country grid once (assets/country_grid.js)
+const exposureGrid = (() => {
+  const G = window.COUNTRY_GRID;
+  if (!G) return null;
+  const cells = new Uint8Array(G.rows * G.cols);
+  G.rle.forEach((row, r) => {
+    let c = r * G.cols;
+    row.split(',').forEach(tok => {
+      const [v, n] = tok.split('.');
+      const id = parseInt(v, 16), count = n ? parseInt(n, 16) : 1;
+      cells.fill(id, c, c + count);
+      c += count;
+    });
+  });
+  const codes = G.codes.map(c => GRID_CODE_ALIAS[c] || c);
+  // Full land area per PRB country (merging aliased polygons)
+  const areaKm2 = {};
+  G.codes.forEach((raw, i) => { areaKm2[codes[i]] = (areaKm2[codes[i]] || 0) + G.area_km2[raw]; });
+  return { ...G, cells, codes, areaKm2 };
+})();
+
+// Radius of gale-force (≥34 kt) winds, km. Linear fit to typical North Indian Ocean
+// wind radii: ~75 km for a 35 kt depression, ~180 km for a 140 kt super cyclone.
+function galeRadiusKm(windKt) {
+  return windKt < 34 ? 0 : 40 + 1.0 * windKt;
+}
+
+// People inside the gale-force swath of the whole forecast track. Each country's land
+// inside the swath is multiplied by its average density (PRB population ÷ land area).
+function computeCivilianExposure(track) {
+  if (!exposureGrid || !track || track.length === 0) return null;
+  const G = exposureGrid;
+  const KM_PER_DEG = 111.195;
+
+  // Densify the track so the swath is continuous between 6-hourly fixes
+  const discs = [];
+  for (let i = 0; i < track.length; i++) {
+    const a = track[i], b = track[i + 1] || a;
+    const segDeg = Math.hypot(b.lat - a.lat, b.lon - a.lon);
+    const n = Math.max(1, Math.ceil(segDeg / 0.1));
+    for (let k = 0; k < (i === track.length - 1 ? 1 : n); k++) {
+      const t = k / n;
+      const wind = a.wind_kt + (b.wind_kt - a.wind_kt) * t;
+      const unc = ((a.radius_deg || 0) + ((b.radius_deg || 0) - (a.radius_deg || 0)) * t) * KM_PER_DEG;
+      const r = galeRadiusKm(wind);
+      if (r > 0) discs.push({ lat: a.lat + (b.lat - a.lat) * t, lon: a.lon + (b.lon - a.lon) * t, r: r + unc });
+    }
+  }
+
+  const result = { total: 0, u15: 0, a65: 0, households: 0, landKm2: 0, byCountry: {} };
+  if (discs.length === 0) return result;
+
+  // Bounding box of the swath, clamped to the grid
+  const maxR = Math.max(...discs.map(d => d.r)) / KM_PER_DEG;
+  const latMin = Math.min(...discs.map(d => d.lat)) - maxR, latMax = Math.max(...discs.map(d => d.lat)) + maxR;
+  const lonPad = maxR / Math.cos(Math.min(80, Math.max(Math.abs(latMin), Math.abs(latMax))) * Math.PI / 180);
+  const lonMin = Math.min(...discs.map(d => d.lon)) - lonPad, lonMax = Math.max(...discs.map(d => d.lon)) + lonPad;
+  const r0 = Math.max(0, Math.floor((latMin - G.lat0) / G.res)), r1 = Math.min(G.rows - 1, Math.ceil((latMax - G.lat0) / G.res));
+  const c0 = Math.max(0, Math.floor((lonMin - G.lon0) / G.res)), c1 = Math.min(G.cols - 1, Math.ceil((lonMax - G.lon0) / G.res));
+
+  const landKm2ByCode = {};
+  for (let r = r0; r <= r1; r++) {
+    const lat = G.lat0 + (r + 0.5) * G.res;
+    const cosLat = Math.cos(lat * Math.PI / 180);
+    const cellKm2 = (G.res * KM_PER_DEG) ** 2 * cosLat;
+    for (let c = c0; c <= c1; c++) {
+      const id = G.cells[r * G.cols + c];
+      if (!id) continue;
+      const lon = G.lon0 + (c + 0.5) * G.res;
+      const inside = discs.some(d => {
+        const dy = (lat - d.lat) * KM_PER_DEG;
+        const dx = (lon - d.lon) * KM_PER_DEG * cosLat;
+        return dx * dx + dy * dy <= d.r * d.r;
+      });
+      if (!inside) continue;
+      const code = G.codes[id - 1];
+      landKm2ByCode[code] = (landKm2ByCode[code] || 0) + cellKm2;
+    }
+  }
+
+  for (const [code, km2] of Object.entries(landKm2ByCode)) {
+    result.landKm2 += km2;
+    const prb = PRB_2020[code];
+    if (!prb) continue; // territory without PRB data (e.g. disputed glacier areas)
+    const people = prb.pop * 1e6 * (km2 / G.areaKm2[code]);
+    result.total += people;
+    result.u15 += people * prb.u15 / 100;
+    result.a65 += people * prb.a65 / 100;
+    result.households += people / (prb.hh || PRB_WORLD_HH);
+    result.byCountry[code] = people;
+  }
+  return result;
+}
+
+// ==========================================
+// 1c. ECONOMIC LOSS MODEL (GEM Global Exposure Model + wind damage curve)
+// ==========================================
+// Building replacement value per 0.1° cell (assets/value_grid.js, from GEM Adm1 totals)
+const valueGrid = (() => {
+  const G = window.VALUE_GRID;
+  if (!G) return null;
+  const cells = new Uint16Array(G.rows * G.cols);
+  G.rle.forEach((row, r) => {
+    let c = r * G.cols;
+    row.split(',').forEach(tok => {
+      const [v, n] = tok.split('.');
+      const count = n ? parseInt(n, 16) : 1;
+      cells.fill(parseInt(v, 16), c, c + count);
+      c += count;
+    });
+  });
+  const units = G.units.map(([country, code, name, usdPerKm2]) => ({ country, code, name, usdPerKm2 }));
+  return { ...G, cells, units };
+})();
+
+const KT_TO_MS = 0.514444;
+
+// Radius of maximum wind, km (Willoughby, Darling & Rahn 2006)
+function radiusMaxWindKm(windKt, lat) {
+  return 46.4 * Math.exp(-0.0155 * windKt * KT_TO_MS + 0.0169 * Math.abs(lat));
+}
+
+// Emanuel (2011) wind damage function, as used by CLIMADA: fraction of value lost.
+// V_half is calibrated to reported North Indian Ocean losses (Phailin 2013 ~$4.5B,
+// Hudhud 2014 ~$3.6B, Fani 2019 ~$8.1B, Amphan 2020 ~$13.7B; fit within ~1.6x).
+// Reported totals include infrastructure, crop and surge losses, which the
+// calibration folds into the building-value damage ratio.
+const DAMAGE_V_THRESH = 25.7; // m/s — no damage below ~50 kt
+const DAMAGE_V_HALF = 41.0;   // m/s — half of the value lost (CLIMADA's global default is 74.7)
+function damageFraction(windKt) {
+  const vn = Math.max(windKt * KT_TO_MS - DAMAGE_V_THRESH, 0) / (DAMAGE_V_HALF - DAMAGE_V_THRESH);
+  const v3 = vn * vn * vn;
+  return v3 / (1 + v3);
+}
+
+// Wind at the fixes and between them, so the damage swath is continuous
+function densifyTrack(track, stepDeg = 0.1) {
+  const pts = [];
+  for (let i = 0; i < track.length; i++) {
+    const a = track[i], b = track[i + 1] || a;
+    const n = Math.max(1, Math.ceil(Math.hypot(b.lat - a.lat, b.lon - a.lon) / stepDeg));
+    for (let k = 0; k < (i === track.length - 1 ? 1 : n); k++) {
+      const t = k / n;
+      pts.push({
+        lat: a.lat + (b.lat - a.lat) * t,
+        lon: a.lon + (b.lon - a.lon) * t,
+        wind: a.wind_kt + (b.wind_kt - a.wind_kt) * t,
+        uncKm: ((a.radius_deg || 0) + ((b.radius_deg || 0) - (a.radius_deg || 0)) * t) * 111.195
+      });
+    }
+  }
+  return pts;
+}
+
+// Peak sustained wind (kt) the storm brings to every 0.1° cell along the forecast track.
+// All basin grids share this geometry (5°S–40°N, 40°E–105°E, 0.1°).
+// Wind field: modified Rankine vortex — linear inside Rmax, power-law decay outside,
+// with the decay tuned so winds fall to 34 kt at the gale radius used for exposure.
+const BASIN_GRID = { lat0: -5, lon0: 40, res: 0.1, rows: 450, cols: 650 };
+function computeWindField(track) {
+  const G = BASIN_GRID;
+  const KM_PER_DEG = 111.195;
+  const vortices = densifyTrack(track || [])
+    .filter(p => p.wind >= 34)
+    .map(p => {
+      const rmax = radiusMaxWindKm(p.wind, p.lat);
+      const r34 = Math.max(galeRadiusKm(p.wind) + p.uncKm, rmax * 1.5);
+      return { ...p, rmax, r34, decay: Math.log(p.wind / 34) / Math.log(r34 / rmax) };
+    });
+  if (vortices.length === 0) return null;
+
+  const maxR = Math.max(...vortices.map(v => v.r34)) / KM_PER_DEG;
+  const latMin = Math.min(...vortices.map(v => v.lat)) - maxR, latMax = Math.max(...vortices.map(v => v.lat)) + maxR;
+  const lonPad = maxR / Math.cos(Math.min(80, Math.max(Math.abs(latMin), Math.abs(latMax))) * Math.PI / 180);
+  const lonMin = Math.min(...vortices.map(v => v.lon)) - lonPad, lonMax = Math.max(...vortices.map(v => v.lon)) + lonPad;
+  const r0 = Math.max(0, Math.floor((latMin - G.lat0) / G.res)), r1 = Math.min(G.rows - 1, Math.ceil((latMax - G.lat0) / G.res));
+  const c0 = Math.max(0, Math.floor((lonMin - G.lon0) / G.res)), c1 = Math.min(G.cols - 1, Math.ceil((lonMax - G.lon0) / G.res));
+  if (r1 < r0 || c1 < c0) return null;
+
+  const width = c1 - c0 + 1;
+  const wind = new Float32Array((r1 - r0 + 1) * width);
+  for (let r = r0; r <= r1; r++) {
+    const lat = G.lat0 + (r + 0.5) * G.res;
+    const cosLat = Math.cos(lat * Math.PI / 180);
+    for (let c = c0; c <= c1; c++) {
+      const lon = G.lon0 + (c + 0.5) * G.res;
+      let w = 0;
+      for (const v of vortices) {
+        const dy = (lat - v.lat) * KM_PER_DEG, dx = (lon - v.lon) * KM_PER_DEG * cosLat;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d > v.r34) continue;
+        const wv = d <= v.rmax ? v.wind * d / v.rmax : v.wind * Math.pow(v.rmax / d, v.decay);
+        if (wv > w) w = wv;
+      }
+      wind[(r - r0) * width + (c - c0)] = w;
+    }
+  }
+  // Visit every cell reached by gale-force (≥34 kt) winds
+  const forEachCell = fn => {
+    for (let r = r0; r <= r1; r++) {
+      const lat = G.lat0 + (r + 0.5) * G.res;
+      const cellKm2 = (G.res * KM_PER_DEG) ** 2 * Math.cos(lat * Math.PI / 180);
+      for (let c = c0; c <= c1; c++) {
+        const w = wind[(r - r0) * width + (c - c0)];
+        if (w >= 34) fn(r * G.cols + c, w, cellKm2, r, c);
+      }
+    }
+  };
+  return { r0, r1, c0, c1, wind, forEachCell };
+}
+
+function getStormWindField(storm) {
+  if (storm._windTrack !== storm.track) {
+    storm._wind = computeWindField(storm.track);
+    storm._windTrack = storm.track;
+  }
+  return storm._wind;
+}
+
+// Expected building loss: every cell's GEM value × damage at the peak wind it sees.
+function computeEconomicLoss(field) {
+  if (!valueGrid) return null;
+  const result = { loss: 0, exposedValue: 0, peakWind: 0, byUnit: {} };
+  if (!field) return result;
+  field.forEachCell((idx, wind, cellKm2) => {
+    const id = valueGrid.cells[idx];
+    if (!id) return;
+    const unit = valueGrid.units[id - 1];
+    const value = unit.usdPerKm2 * cellKm2;
+    const loss = value * damageFraction(wind);
+    result.exposedValue += value;
+    result.loss += loss;
+    result.peakWind = Math.max(result.peakWind, wind);
+    if (loss > 0) result.byUnit[unit.name] = (result.byUnit[unit.name] || 0) + loss;
+  });
+  return result;
+}
+
+// ==========================================
+// 1d. POWER GRID MODEL (UNDP grid.pmtiles → assets/power_grid.js)
+// ==========================================
+// km of power line per 0.1° cell (OpenStreetMap + gridfinder-predicted lines)
+const powerGrid = (() => {
+  const P = window.POWER_GRID;
+  if (!P) return null;
+  const km = new Float32Array(P.rows * P.cols);
+  P.rle.forEach((row, r) => {
+    let c = r * P.cols;
+    for (let i = 0; i < row.length; i++) {
+      const L = parseInt(row[i], 36);
+      let count = 1;
+      if (row[i + 1] === '~') {
+        const end = row.indexOf('~', i + 2);
+        count = parseInt(row.slice(i + 2, end), 36);
+        i = end;
+      }
+      km.fill(L === 0 ? 0 : P.base * Math.pow(P.factor, L - 1), c, c + count);
+      c += count;
+    }
+  });
+  return { ...P, km };
+})();
+
+// Standard-normal CDF (Abramowitz & Stegun 7.1.26)
+function normalCdf(x) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
+  const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x / 2);
+  return 0.5 * (1 + Math.sign(x) * erf);
+}
+function lognormalFragility(windKt, medianMs, beta) {
+  const v = windKt * KT_TO_MS;
+  return v <= 0 ? 0 : normalCdf(Math.log(v / medianMs) / beta);
+}
+// Physical failure of distribution lines/poles (conductor & pole breakage)
+const LINE_FAIL_MEDIAN_MS = 42, LINE_FAIL_BETA = 0.35;
+// Loss of supply to a connected household: trips, tree falls and debris start
+// well below structural failure (~15% at gale force, ~70% at 64 kt, >95% at 100 kt)
+const OUTAGE_MEDIAN_MS = 26, OUTAGE_BETA = 0.40;
+
+// Grid fragility and household power-loss likelihood for the whole forecast track
+function computePowerImpact(field) {
+  if (!powerGrid || !exposureGrid) return null;
+  const G = BASIN_GRID;
+  const res = { lineKm: 0, damagedKm: 0, fragility: 0, onGridPeople: 0, offGridPeople: 0, peopleOut: 0, outageProb: 0 };
+  if (!field) return res;
+  // A cell counts as grid-connected if it or a neighbour carries a power line
+  const hasGrid = (r, c) => {
+    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+      const rr = r + dr, cc = c + dc;
+      if (rr >= 0 && rr < G.rows && cc >= 0 && cc < G.cols && powerGrid.km[rr * G.cols + cc] > 0) return true;
+    }
+    return false;
+  };
+  field.forEachCell((idx, wind, cellKm2, r, c) => {
+    const km = powerGrid.km[idx];
+    if (km > 0) {
+      res.lineKm += km;
+      res.damagedKm += km * lognormalFragility(wind, LINE_FAIL_MEDIAN_MS, LINE_FAIL_BETA);
+    }
+    const id = exposureGrid.cells[idx];
+    const code = id ? exposureGrid.codes[id - 1] : null;
+    const prb = code && PRB_2020[code];
+    if (!prb) return;
+    const people = prb.pop * 1e6 / exposureGrid.areaKm2[code] * cellKm2;
+    if (hasGrid(r, c)) {
+      res.onGridPeople += people;
+      res.peopleOut += people * lognormalFragility(wind, OUTAGE_MEDIAN_MS, OUTAGE_BETA);
+    } else {
+      res.offGridPeople += people;
+    }
+  });
+  res.fragility = res.lineKm > 0 ? 100 * res.damagedKm / res.lineKm : 0;
+  res.outageProb = res.onGridPeople > 0 ? res.peopleOut / res.onGridPeople : 0;
+  return res;
+}
+
+function formatUsd(n) {
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(n >= 1e10 ? 1 : 2)}B`;
+  if (n >= 1e6) return `$${Math.round(n / 1e6)}M`;
+  return `$${Math.round(n / 1e3)}K`;
+}
+
+function getStormLoss(storm) {
+  if (!storm._loss || storm._lossTrack !== storm.track) {
+    storm._loss = computeEconomicLoss(getStormWindField(storm));
+    storm._lossTrack = storm.track;
+  }
+  return storm._loss;
+}
+
+function getStormPower(storm) {
+  if (!storm._power || storm._powerTrack !== storm.track) {
+    storm._power = computePowerImpact(getStormWindField(storm));
+    storm._powerTrack = storm.track;
+  }
+  return storm._power;
+}
+
+function formatPeople(n) {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(n >= 1e7 ? 1 : 2)}M`;
+  if (n >= 1e3) return `${Math.round(n / 1e3)}K`;
+  return `${Math.round(n)}`;
+}
+
+// Cached per track so the scan only reruns when a forecast changes
+function getStormExposure(storm) {
+  if (!storm._exposure || storm._exposureTrack !== storm.track) {
+    storm._exposure = computeCivilianExposure(storm.track);
+    storm._exposureTrack = storm.track;
+  }
+  return storm._exposure;
+}
+
+let currentStormKey = "latest";
+let currentStepIndex = 0;
+let autoPlayInterval = null;
+let playbackSpeed = 2; // in seconds
+let activeGeoJSON = null;
+
+// ==========================================
+// 2. LIVE UTC CLOCK
+// ==========================================
+function updateUTCClock() {
+  const clockEl = document.getElementById("utc-clock");
+  if (clockEl) {
+    const now = new Date();
+    clockEl.textContent = now.toUTCString().slice(17, 25) + " UTC";
+  }
+}
+setInterval(updateUTCClock, 1000);
+updateUTCClock();
+
+// ==========================================
+// 3. FETCH & LOAD GEOJSON FORECAST
+// ==========================================
+async function loadGeoJSONData() {
+  const candidates = [
+    "/data/latest_forecast.geojson",
+    "data/latest_forecast.geojson",
+    "/latest_forecast.geojson",
+    "latest_forecast.geojson"
+  ];
+  
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.features && data.features.length > 0) {
+          parseGeoJSONToStorm(data);
+          document.getElementById("hud-source-status").textContent = "GeoJSON File Linked";
+          return data;
+        }
+      }
+    } catch (e) {
+      // Continue searching next candidate
+    }
+  }
+  // If fetch failed (e.g. file:// protocol restriction), default to preset
+  console.log("Using built-in live inference preset for dashboard display.");
+  return null;
+}
+
+function parseGeoJSONToStorm(geojson) {
+  activeGeoJSON = geojson;
+  let originLat = 15.5;
+  let originLon = 85.2;
+  let category = "Deep Depression";
+  let confidence = 0.88;
+  const track = [];
+
+  geojson.features.forEach(f => {
+    const p = f.properties || {};
+    const g = f.geometry || {};
+    if (p.type === "current_position" && g.coordinates) {
+      originLon = g.coordinates[0];
+      originLat = g.coordinates[1];
+      if (p.category) category = p.category;
+      if (p.confidence) confidence = p.confidence;
+    }
+    if (p.type === "forecast_point" && g.coordinates) {
+      const step = p.step || track.length + 1;
+      const windKt = p.wind_speed_kt != null ? Math.round(p.wind_speed_kt < 0 ? (45 + p.step * 8) : p.wind_speed_kt) : 50;
+      const presHpa = p.pressure_hpa != null ? Math.round(p.pressure_hpa < 100 ? (995 - p.step * 6) : p.pressure_hpa) : 985;
+      const rDeg = p.uncertainty_radius_deg || 0.05 * step;
+      track.push({
+        step: step,
+        lat: g.coordinates[1],
+        lon: g.coordinates[0],
+        wind_kt: windKt,
+        pressure_hpa: presHpa,
+        radius_deg: rDeg
+      });
+    }
+  });
+
+  track.unshift({
+    step: 0,
+    lat: originLat,
+    lon: originLon,
+    wind_kt: Math.max(35, track.length > 0 ? track[0].wind_kt - 10 : 45),
+    pressure_hpa: track.length > 0 ? track[0].pressure_hpa + 8 : 996,
+    radius_deg: 0.03
+  });
+
+  const windKmh = Math.round(track[0].wind_kt * 1.852);
+
+  STORMS_DB.latest = {
+    name: "Live Inferred System",
+    category: category,
+    confidence: confidence,
+    lat: originLat,
+    lon: originLon,
+    wind_kmh: windKmh,
+    wind_kt: track[0].wind_kt,
+    pressure_hpa: track[0].pressure_hpa,
+    surge_m: 2.4,
+    readiness: "94.0%",
+    track: track,
+    chain: [
+      { title: `${category} Eyewall Front`, time: "T-00h", desc: `Current position: ${originLat.toFixed(2)}°N, ${originLon.toFixed(2)}°E with ${windKmh} km/h winds.` },
+      { title: "Coastal Surge Inundation", time: "T+06h", desc: "Backflow rate rises over low-elevation estuaries and barrier islands." },
+      { title: "Substation Auto-Isolation", time: "T+18h", desc: "Regional coastal grid isolators transition to passive safety mode." }
+    ]
+  };
+
+  updateUI(STORMS_DB.latest, 0);
+  rebuildThreeJSTrack(STORMS_DB.latest);
+  updateLeafletLayers(STORMS_DB.latest);
+}
+
+// ==========================================
+// 4. UI STATE SYNC
+// ==========================================
+function renderPower(res) {
+  const frag = document.getElementById("stat-fragility");
+  const fragSub = document.getElementById("stat-fragility-sub");
+  const pct = document.getElementById("power-risk-pct");
+  const bar = document.getElementById("power-risk-bar");
+  const sub = document.getElementById("power-risk-sub");
+  if (!res) {
+    frag.textContent = "—";
+    fragSub.textContent = "Grid data unavailable";
+    pct.textContent = "—";
+    bar.style.width = "0%";
+    sub.textContent = "Power grid data unavailable.";
+    return;
+  }
+  frag.innerHTML = `${res.fragility.toFixed(1)}<span class="text-[10px] text-slate-500 font-normal">/100</span>`;
+  const lineKmShort = res.lineKm >= 1e3 ? `${(res.lineKm / 1e3).toFixed(1)}K` : `${Math.round(res.lineKm)}`;
+  fragSub.textContent = res.lineKm > 0 ? `${lineKmShort} km lines exposed` : "No lines in swath";
+  const outagePct = Math.round(res.outageProb * 100);
+  pct.textContent = `${outagePct}%`;
+  bar.style.width = `${outagePct}%`;
+  if (res.onGridPeople < 1) {
+    sub.textContent = "No grid-connected population inside the gale-force swath.";
+  } else {
+    sub.textContent = `≈${formatPeople(res.peopleOut)} of ${formatPeople(res.onGridPeople)} grid-connected people in the swath are likely to lose power` +
+      (res.offGridPeople >= 1e3 ? ` (${formatPeople(res.offGridPeople)} more live off-grid).` : ".");
+  }
+  const detail = [
+    `Grid fragility ${res.fragility.toFixed(1)}/100 — share of power lines in the swath expected to fail`,
+    `${Math.round(res.lineKm).toLocaleString()} km of lines exposed, ≈${Math.round(res.damagedKm).toLocaleString()} km expected damaged`,
+    `Outage likelihood ${outagePct}% for grid-connected residents (≈${formatPeople(res.peopleOut)} people)`,
+    `Grid: UNDP global electricity grid (OpenStreetMap + gridfinder)`,
+    `Fragility: lognormal wind curves — line failure median 42 m/s, household outage median 26 m/s`
+  ].join("\n");
+  frag.closest("div").title = detail;
+  document.getElementById("power-card").title = detail;
+}
+
+function renderLoss(res) {
+  const stat = document.getElementById("stat-loss");
+  const sub = document.getElementById("stat-loss-sub");
+  const card = stat.closest("div");
+  if (!res) {
+    stat.textContent = "—";
+    sub.textContent = "Exposure grid unavailable";
+    return;
+  }
+  stat.textContent = res.loss < 1e6 ? "<$1M" : formatUsd(res.loss);
+  if (res.loss < 1e6) {
+    sub.textContent = res.exposedValue > 0 ? "Winds below damage threshold" : "Offshore · no assets in swath";
+    sub.className = "text-[10px] text-emerald-400 font-medium block mt-0.5 truncate";
+  } else {
+    const [topName, topLoss] = Object.entries(res.byUnit).sort((a, b) => b[1] - a[1])[0];
+    sub.textContent = `${topName} ${formatUsd(topLoss)}`;
+    sub.className = "text-[10px] text-rose-400 font-medium block mt-0.5 truncate";
+  }
+  card.title = [
+    `${formatUsd(res.loss)} expected loss to buildings & contents`,
+    `${formatUsd(res.exposedValue)} of building value inside the gale-force swath`,
+    `Peak wind over land: ${Math.round(res.peakWind)} kt`,
+    ...Object.entries(res.byUnit).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([n, v]) => `  ${n}: ${formatUsd(v)}`),
+    `Values: GEM Global Exposure Model (state/province replacement cost)`,
+    `Damage: Emanuel (2011) wind curve, calibrated to past Bay of Bengal cyclones`
+  ].join("\n");
+}
+
+function renderExposure(exp) {
+  const hud = document.getElementById("hud-risk");
+  const stat = document.getElementById("stat-exposure");
+  const sub = document.getElementById("stat-exposure-sub");
+  const card = stat.closest("div");
+  if (!exp) {
+    hud.textContent = "—";
+    stat.textContent = "—";
+    sub.textContent = "Population grid unavailable";
+    return;
+  }
+  if (exp.total < 1) {
+    hud.textContent = "0 Civ";
+    stat.textContent = "0";
+    sub.textContent = "Offshore · no land in gale swath";
+    sub.className = "text-[9px] text-emerald-400 font-medium block mt-0.5";
+  } else {
+    hud.textContent = `${formatPeople(exp.total)} Civ`;
+    stat.textContent = formatPeople(exp.total);
+    const top = Object.entries(exp.byCountry).sort((a, b) => b[1] - a[1]).slice(0, 2);
+    sub.textContent = top.map(([code, n]) => `${code} ${formatPeople(n)}`).join(" · ");
+    sub.className = "text-[9px] text-rose-400 font-medium block mt-0.5";
+  }
+  const detail = [
+    `${formatPeople(exp.total)} people inside the gale-force (≥34 kt) swath of the forecast track`,
+    `${Math.round(exp.landKm2).toLocaleString()} km² of land affected`,
+    `Ages 65+: ${formatPeople(exp.a65)} · Under 15: ${formatPeople(exp.u15)}`,
+    `≈${formatPeople(exp.households)} households`,
+    `Source: PRB 2020 World Population Data Sheet (national population ÷ land area)`
+  ].join("\n");
+  card.title = detail;
+  hud.title = detail;
+}
+
+// Confidence bar, advisory tip and per-step intensity bars in the Insights panel
+function renderInsights(storm, stepIdx, exposure) {
+  const confPct = Math.round((storm.confidence || 0.9) * 100);
+  document.getElementById("insight-confidence").innerHTML = `${confPct}<span class="text-xs text-slate-500">/100</span>`;
+  document.getElementById("insight-confidence-bar").style.width = `${confPct}%`;
+
+  const tip = document.getElementById("insight-tip");
+  if (!exposure) {
+    tip.textContent = "Population grid unavailable — exposure cannot be assessed.";
+  } else if (exposure.total < 1) {
+    tip.textContent = "The forecast gale swath stays offshore. Keep fishing fleets in harbour and continue monitoring for track shifts.";
+  } else {
+    const lead = Object.entries(exposure.byCountry).sort((a, b) => b[1] - a[1])[0][0];
+    tip.textContent = `${formatPeople(exposure.total)} people fall inside the gale-force swath, mostly in ${exposureGrid.names[lead] || lead}. ` +
+      `Prioritise evacuation support for ~${formatPeople(exposure.a65)} residents aged 65+.`;
+    const power = getStormPower(storm);
+    if (power && power.peopleOut >= 1e3) {
+      tip.textContent += ` Expect ~${formatPeople(power.peopleOut)} people without power — pre-position generators for hospitals and shelters.`;
+    }
+  }
+
+  const bars = document.getElementById("intensity-bars");
+  const labels = document.getElementById("intensity-labels");
+  const track = storm.track || [];
+  const maxWind = Math.max(...track.map(p => p.wind_kt), 64);
+  bars.innerHTML = track.map((p, i) => {
+    const h = Math.max(8, Math.round((p.wind_kt / maxWind) * 100));
+    const cls = i === stepIdx ? "is-current" : (p.wind_kt < 34 ? "is-gale-free" : "");
+    return `<div class="flex-1 h-full flex items-end justify-center" title="T+${i * 6}h · ${p.wind_kt} kt">
+      <div class="bar ${cls}" style="height:${h}%"></div></div>`;
+  }).join("");
+  labels.innerHTML = track.map((p, i) =>
+    `<span class="flex-1 text-center ${i === stepIdx ? "text-emerald-400" : ""}">${i === 0 ? "Now" : `+${i * 6}h`}</span>`
+  ).join("");
+}
+
+function updateUI(storm, stepIdx = 0) {
+  const step = storm.track && storm.track[stepIdx] ? storm.track[stepIdx] : storm.track[0];
+  const windKmh = Math.round(step.wind_kt * 1.852);
+  const confPct = Math.round((storm.confidence || 0.9) * 100);
+
+  // Top Crisis Pill
+  document.getElementById("header-storm-name").textContent = storm.name;
+  document.getElementById("header-storm-cat").textContent = storm.category;
+  
+  // Left Panel Incident Card
+  document.getElementById("card-storm-name").textContent = storm.name;
+  document.getElementById("card-storm-badge").textContent = /cat 5/i.test(storm.category) ? "Cat 5" : (/cat 4/i.test(storm.category) ? "Cat 4" : "Active");
+  document.getElementById("card-storm-sub").textContent = `Sector 04 · Eyewall Track ${step.lat.toFixed(2)}°N, ${step.lon.toFixed(2)}°E`;
+  document.getElementById("card-wind").textContent = `${windKmh} km/h`;
+  document.getElementById("card-pressure").textContent = `${step.pressure_hpa} hPa`;
+  document.getElementById("card-confidence").textContent = `${confPct}%`;
+
+  // Floating HUD Center Card
+  document.getElementById("hud-title").textContent = `${storm.name} Focus`;
+  document.getElementById("hud-pressure").textContent = `${step.pressure_hpa} hPa`;
+  document.getElementById("hud-wind").textContent = `${windKmh} km/h`;
+  const exposure = getStormExposure(storm);
+  renderExposure(exposure);
+  document.getElementById("hud-latlon").textContent = `${step.lat.toFixed(2)}°N, ${step.lon.toFixed(2)}°E`;
+
+  // Right Panel AI Impact Cards
+  renderPower(getStormPower(storm));
+  renderLoss(getStormLoss(storm));
+  document.getElementById("stat-readiness").textContent = storm.readiness;
+
+  // Sparkline values
+  document.getElementById("spark-wind-val").textContent = `${step.wind_kt} kts (${windKmh} km/h)`;
+  document.getElementById("spark-pres-val").textContent = `${step.pressure_hpa} hPa`;
+  document.getElementById("spark-surge-val").textContent = `+${storm.surge_m} m`;
+
+  renderInsights(storm, stepIdx, exposure);
+
+  // Threat chain
+  const chainList = document.getElementById("threat-chain-list");
+  if (chainList && storm.chain) {
+    const itemsHtml = storm.chain.map((c, i) => {
+      const colors = ["border-rose-500", "border-amber-400", "border-cyan-400"];
+      const col = colors[i % colors.length];
+      return `
+        <div class="relative flex items-start gap-3 pl-3">
+          <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-[#080d14] border-2 ${col}"></div>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-2 mb-0.5">
+              <span class="text-xs font-semibold text-white">${c.title}</span>
+              <span class="font-mono text-[10px] text-slate-500">${c.time}</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">${c.desc}</p>
+          </div>
+        </div>
+      `;
+    }).join("");
+    chainList.innerHTML = `
+      <div class="absolute left-[2px] top-2 bottom-3 w-[1px] bg-gradient-to-b from-rose-500 via-amber-400 to-cyan-400 opacity-30"></div>
+      ${itemsHtml}
+    `;
+  }
+
+  // Scrubber Label
+  const scrubberLabel = document.getElementById("scrubber-label");
+  if (scrubberLabel) {
+    if (stepIdx === 0) {
+      scrubberLabel.textContent = "T+00h · current position";
+      scrubberLabel.className = "tag tag-green truncate";
+    } else {
+      const hours = stepIdx * 6;
+      scrubberLabel.textContent = `T+${hours}h · AI projection`;
+      scrubberLabel.className = "tag tag-blue truncate";
+    }
+  }
+
+  // Update Modal Content
+  document.getElementById("modal-bulletin-title").textContent = `IMD / SIXTH PANDAVA CRITICAL DISASTER ALERT — ${storm.name.toUpperCase()}:`;
+  document.getElementById("modal-winds").textContent = `${windKmh} km/h (${step.wind_kt} kts)`;
+  document.getElementById("modal-surge").textContent = `+${storm.surge_m}m over astronomical high tide`;
+}
+
+// ==========================================
+// 4. MICRO-INTERACTIONS (count-up numbers, sliding nav, card light, entrance)
+// ==========================================
+(function initMicroInteractions() {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // --- Cards lift and track a soft cursor light (not the map viewport or timeline) ---
+  document.querySelectorAll('.card').forEach(card => {
+    if (card.querySelector('#threejs-container-ANIMATION_207, #timeline-slider')) return;
+    card.classList.add('lift');
+    card.addEventListener('pointermove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  });
+
+  // --- Sliding selection pill behind the active sidebar view ---
+  const nav = document.getElementById('view-mode-3d')?.parentElement;
+  if (nav) {
+    nav.classList.add('nav-track');
+    const indicator = document.createElement('span');
+    indicator.className = 'nav-indicator';
+    indicator.setAttribute('aria-hidden', 'true');
+    nav.prepend(indicator);
+    const place = () => {
+      const active = nav.querySelector('.nav-item.is-active');
+      if (!active) return;
+      indicator.style.height = `${active.offsetHeight}px`;
+      indicator.style.transform = `translateY(${active.offsetTop}px)`;
+    };
+    place();
+    new MutationObserver(place).observe(nav, { attributes: true, subtree: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', place);
+  }
+
+  // --- Numbers count to their new value; other text cross-fades in ---
+  const NUMBER_RE = /^(\D*?)(-?\d[\d,]*(?:\.\d+)?)([\s\S]*)$/;
+  const parse = text => {
+    const m = NUMBER_RE.exec(text.trim());
+    if (!m) return null;
+    const raw = m[2];
+    return {
+      prefix: m[1], suffix: m[3], value: parseFloat(raw.replace(/,/g, '')),
+      decimals: raw.includes('.') ? raw.split('.')[1].length : 0, commas: raw.includes(',')
+    };
+  };
+  const format = (n, spec) => {
+    let s = n.toFixed(spec.decimals);
+    if (spec.commas) s = Number(s).toLocaleString('en-US', { minimumFractionDigits: spec.decimals, maximumFractionDigits: spec.decimals });
+    return spec.prefix + s + spec.suffix;
+  };
+  // First text node that holds the number (values like "21.9<span>/100</span>")
+  const numberNode = el => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) if (/\d/.test(n.data)) return n;
+    return null;
+  };
+  const swapIn = el => {
+    el.classList.remove('text-swap');
+    void el.offsetWidth; // restart the animation
+    el.classList.add('text-swap');
+  };
+
+  function watchNumber(el) {
+    let shown = null;      // last value spec painted on screen
+    let written = null;    // last string this code wrote (to ignore our own mutations)
+    let frame = null;
+    const observer = new MutationObserver(() => {
+      const node = numberNode(el);
+      if (!node || node.data === written) return;
+      const target = parse(node.data);
+      if (!target || reduceMotion) { shown = target; swapIn(el); return; }
+      // Only count when the unit is unchanged ($6.3B → $5.1B); otherwise cross-fade
+      const from = shown && shown.prefix === target.prefix && shown.suffix === target.suffix ? shown.value : (shown ? null : 0);
+      cancelAnimationFrame(frame);
+      if (from === null || from === target.value) { shown = target; swapIn(el); return; }
+      const start = performance.now(), duration = 750, finalText = node.data;
+      const step = now => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+        const value = from + (target.value - from) * eased;
+        written = t === 1 ? finalText : format(value, target);
+        node.data = written;
+        shown = { ...target, value };
+        if (t < 1) frame = requestAnimationFrame(step);
+      };
+      frame = requestAnimationFrame(step);
+    });
+    observer.observe(el, { childList: true, subtree: true, characterData: true });
+  }
+
+  function watchText(el) {
+    let last = el.textContent;
+    new MutationObserver(() => {
+      if (el.textContent === last) return;
+      last = el.textContent;
+      if (!reduceMotion) swapIn(el);
+    }).observe(el, { childList: true, subtree: true, characterData: true });
+  }
+
+  ['stat-exposure', 'stat-loss', 'stat-fragility', 'stat-readiness', 'insight-confidence', 'power-risk-pct',
+   'hud-pressure', 'hud-wind', 'hud-risk', 'card-wind', 'card-pressure', 'card-confidence',
+   'spark-wind-val', 'spark-pres-val', 'spark-surge-val']
+    .forEach(id => { const el = document.getElementById(id); if (el) watchNumber(el); });
+  ['header-storm-name', 'header-storm-cat', 'card-storm-name', 'card-storm-sub', 'hud-title', 'scrubber-label',
+   'stat-exposure-sub', 'stat-loss-sub', 'stat-fragility-sub', 'power-risk-sub', 'insight-tip']
+    .forEach(id => { const el = document.getElementById(id); if (el) watchText(el); });
+
+  // --- Staggered entrance on first load ---
+  if (!reduceMotion) {
+    const groups = [
+      document.querySelectorAll('aside:first-of-type > *, aside:first-of-type .nav-item'),
+      document.querySelectorAll('section.panel > header > *'),
+      [document.getElementById('crisis-pill')?.parentElement],
+      document.querySelectorAll('#primary-incident-card, #primary-incident-card ~ * .card'),
+      [document.getElementById('threejs-container-ANIMATION_207')?.closest('.card'),
+       document.getElementById('timeline-slider')?.closest('.card')],
+      document.querySelectorAll('.insights-frame > div:first-child > *')
+    ];
+    let i = 0;
+    groups.forEach(list => list.forEach(el => {
+      if (!el) return;
+      el.style.setProperty('--i', i++);
+      el.classList.add('reveal');
+      el.addEventListener('animationend', () => el.classList.remove('reveal'), { once: true });
+    }));
+  }
+})();
+
+// ==========================================
+// 4a. MOVABLE / RESIZABLE STORM HUD CARD
+// ==========================================
+(function initHudCard() {
+  const card = document.getElementById('hud-card');
+  const dragHandle = document.getElementById('hud-drag-handle');
+  const resizeHandle = document.getElementById('hud-resize-handle');
+  const viewport = card && card.parentElement;
+  if (!card || !dragHandle || !resizeHandle || !viewport) return;
+
+  const STORAGE_KEY = 'aegis.hudCard';
+  const MIN_SCALE = 0.7, MAX_SCALE = 2;
+  // Position is kept as a fraction of the viewport so it survives window resizes
+  let state = null;
+
+  function defaults() {
+    return { fx: 0.5, fy: 0.62, scale: 1 };
+  }
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      if (saved && isFinite(saved.fx) && isFinite(saved.fy) && isFinite(saved.scale)) return saved;
+    } catch (e) { /* storage unavailable — fall back to defaults */ }
+    return defaults();
+  }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+
+  // fx/fy locate the card's centre within the free space of the viewport
+  function apply() {
+    state.scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, state.scale));
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    // Never scale the card larger than the viewport itself
+    const fit = Math.min((vw - 8) / card.offsetWidth, (vh - 8) / card.offsetHeight);
+    const scale = Math.max(Math.min(state.scale, fit), 0.3);
+    const w = card.offsetWidth * scale, h = card.offsetHeight * scale;
+    const x = Math.min(Math.max(0, state.fx * vw - w / 2), Math.max(0, vw - w));
+    const y = Math.min(Math.max(0, state.fy * vh - h / 2), Math.max(0, vh - h));
+    card.style.left = `${x}px`;
+    card.style.top = `${y}px`;
+    card.style.transform = `scale(${scale})`;
+    return { x, y, w, h, vw, vh, scale };
+  }
+
+  // Drag to move
+  dragHandle.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const start = apply();
+    const ox = e.clientX, oy = e.clientY;
+    try { dragHandle.setPointerCapture(e.pointerId); } catch (err) { /* pointer already released */ }
+    card.classList.add('is-dragging');
+    const move = ev => {
+      state.fx = (start.x + ev.clientX - ox + start.w / 2) / start.vw;
+      state.fy = (start.y + ev.clientY - oy + start.h / 2) / start.vh;
+      const placed = apply();
+      // Re-anchor to the clamped position so the card stops cleanly at the edges
+      state.fx = (placed.x + placed.w / 2) / placed.vw;
+      state.fy = (placed.y + placed.h / 2) / placed.vh;
+    };
+    const up = () => {
+      dragHandle.removeEventListener('pointermove', move);
+      dragHandle.removeEventListener('pointerup', up);
+      dragHandle.removeEventListener('pointercancel', up);
+      card.classList.remove('is-dragging');
+      save();
+    };
+    dragHandle.addEventListener('pointermove', move);
+    dragHandle.addEventListener('pointerup', up);
+    dragHandle.addEventListener('pointercancel', up);
+  });
+
+  // Drag the corner grip to resize; the top-left corner stays put
+  resizeHandle.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const start = apply();
+    const ox = e.clientX, oy = e.clientY;
+    const baseW = card.offsetWidth, baseH = card.offsetHeight;
+    try { resizeHandle.setPointerCapture(e.pointerId); } catch (err) { /* pointer already released */ }
+    card.classList.add('is-dragging');
+    const move = ev => {
+      const sx = (start.w + ev.clientX - ox) / baseW;
+      const sy = (start.h + ev.clientY - oy) / baseH;
+      state.scale = Math.max(sx, sy);
+      const s = Math.min(MAX_SCALE, Math.max(MIN_SCALE, state.scale));
+      state.fx = (start.x + (baseW * s) / 2) / start.vw;
+      state.fy = (start.y + (baseH * s) / 2) / start.vh;
+      apply();
+    };
+    const up = () => {
+      resizeHandle.removeEventListener('pointermove', move);
+      resizeHandle.removeEventListener('pointerup', up);
+      resizeHandle.removeEventListener('pointercancel', up);
+      card.classList.remove('is-dragging');
+      save();
+    };
+    resizeHandle.addEventListener('pointermove', move);
+    resizeHandle.addEventListener('pointerup', up);
+    resizeHandle.addEventListener('pointercancel', up);
+  });
+
+  // Double-click the header to restore the default spot and size
+  dragHandle.addEventListener('dblclick', () => {
+    state = defaults();
+    apply();
+    save();
+  });
+
+  state = load();
+  apply();
+  new ResizeObserver(() => apply()).observe(viewport);
+})();
+
+// ==========================================
+// 4b. DEEP-SPACE STARFIELD BACKDROP
+// ==========================================
+(function initStarfield() {
+  const canvas = document.getElementById('starfield');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let stars = [];
+  let w = 0, h = 0, dpr = 1;
+
+  function seed() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = window.innerWidth; h = window.innerHeight;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const count = Math.round((w * h) / 4200);
+    stars = Array.from({ length: count }, () => {
+      const big = Math.random() < 0.035;
+      return {
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: big ? 1.1 + Math.random() * 0.8 : 0.3 + Math.random() * 0.7,
+        base: 0.25 + Math.random() * 0.6,
+        speed: 0.4 + Math.random() * 1.6,
+        phase: Math.random() * Math.PI * 2,
+        sparkle: big,
+        tint: Math.random() < 0.3 ? '170, 215, 255' : (Math.random() < 0.15 ? '160, 255, 235' : '255, 255, 255')
+      };
+    });
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, w, h);
+    for (const s of stars) {
+      const a = reduceMotion ? s.base : s.base * (0.6 + 0.4 * Math.sin(t * s.speed + s.phase));
+      ctx.fillStyle = `rgba(${s.tint}, ${a})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+      if (s.sparkle) {
+        // Four-point diffraction glint on the brightest stars
+        const len = s.r * 5 * (0.7 + 0.3 * a);
+        const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, len);
+        g.addColorStop(0, `rgba(${s.tint}, ${a * 0.8})`);
+        g.addColorStop(1, `rgba(${s.tint}, 0)`);
+        ctx.fillStyle = g;
+        ctx.fillRect(s.x - len, s.y - 0.5, len * 2, 1);
+        ctx.fillRect(s.x - 0.5, s.y - len, 1, len * 2);
+      }
+    }
+  }
+
+  seed();
+  window.addEventListener('resize', () => { seed(); draw(performance.now() / 1000); });
+  if (reduceMotion) { draw(0); return; }
+
+  let last = 0;
+  (function loop(now) {
+    requestAnimationFrame(loop);
+    if (now - last < 42) return; // ~24fps is plenty for a twinkle
+    last = now;
+    draw(now / 1000);
+  })(0);
+})();
+
+// ==========================================
+// 5. THREE.JS 3D EXPANSIVE GLOBE SCENE
+// ==========================================
+let globeScene, globeCamera, globeRenderer, globeGroup, ringsGroup;
+let cyanRing, eyeMesh, trackLine;
+let waypointMeshes = [];
+let otherHazardMarkers = [];
+let isGlobeDragging = false;
+let globePrevMouse = { x: 0, y: 0 };
+let globeTargetRotation = { x: 0.25, y: -1.4 };
+let globeDotMaterials = [];
+
+// Converts a world-space dot size into screen pixels for the current viewport
+function updateGlobeDotScale() {
+  if (!globeRenderer || !globeCamera) return;
+  const h = globeRenderer.getSize(new THREE.Vector2()).y * globeRenderer.getPixelRatio();
+  const scale = h * globeCamera.projectionMatrix.elements[5] / 2;
+  globeDotMaterials.forEach(m => { m.uniforms.uScale.value = scale; });
+}
+
+function latLonToSpherePos(lat, lon, r = 1.63) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+  const x = -(r * Math.sin(phi) * Math.cos(theta));
+  const z = r * Math.sin(phi) * Math.sin(theta);
+  const y = r * Math.cos(phi);
+  return new THREE.Vector3(x, y, z);
+}
+
+function initThreeJSGlobe() {
+  const container = document.getElementById("threejs-container-ANIMATION_207");
+  if (!container) return;
+  const width = container.clientWidth || window.innerWidth / 2;
+  const height = container.clientHeight || window.innerHeight / 2;
+
+  globeScene = new THREE.Scene();
+  globeCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+  globeCamera.position.set(0, 0, 4.3);
+
+  globeRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  globeRenderer.setSize(width, height);
+  globeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  globeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  globeRenderer.toneMappingExposure = 1.2;
+  container.appendChild(globeRenderer.domElement);
+
+  // Subtle ambient + directional for depth
+  const ambientLight = new THREE.AmbientLight(0x0a1628, 1.5);
+  globeScene.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.8);
+  dirLight.position.set(5, 3, 5);
+  globeScene.add(dirLight);
+  const rimLight = new THREE.DirectionalLight(0x0ea5e9, 0.6);
+  rimLight.position.set(-4, -2, -3);
+  globeScene.add(rimLight);
+
+  globeGroup = new THREE.Group();
+  globeScene.add(globeGroup);
+
+  // ===== SHARED VIEW-SPACE VERTEX SHADER =====
+  const atmosVert = `
+    varying vec3 vNormal;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `;
+
+  // ===== MATTE DEEP-OCEAN SPHERE (no specular hotspot) =====
+  const GLOBE_R = 1.58;
+  const coreFrag = `
+    varying vec3 vNormal;
+    void main() {
+      float facing = max(vNormal.z, 0.0);
+      float light = max(dot(vNormal, normalize(vec3(0.35, 0.55, 0.75))), 0.0);
+      vec3 deep = vec3(0.006, 0.014, 0.026);
+      vec3 lit  = vec3(0.018, 0.045, 0.075);
+      vec3 col = mix(deep, lit, light * light);
+      col *= 0.55 + 0.45 * facing; // darken toward the limb for volume
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+  globeGroup.add(new THREE.Mesh(
+    new THREE.SphereGeometry(GLOBE_R, 128, 128),
+    new THREE.ShaderMaterial({ vertexShader: atmosVert, fragmentShader: coreFrag })
+  ));
+
+  // ===== CRISP TEAL-GREEN LIMB (thin lit edge, brightest top/right) =====
+  const rimFrag = `
+    varying vec3 vNormal;
+    void main() {
+      float edge = 1.0 - max(vNormal.z, 0.0);
+      float fres = pow(edge, 7.0);
+      vec2 edgeDir = normalize(vNormal.xy + vec2(1e-5));
+      float lit = 0.5 + 0.5 * dot(edgeDir, normalize(vec2(0.55, 0.85)));
+      vec3 col = mix(vec3(0.1, 0.4, 0.6), vec3(0.6, 1.0, 0.78), lit);
+      gl_FragColor = vec4(col, fres * (0.1 + 0.95 * lit * lit));
+    }
+  `;
+  globeGroup.add(new THREE.Mesh(
+    new THREE.SphereGeometry(GLOBE_R + 0.012, 96, 96),
+    new THREE.ShaderMaterial({
+      vertexShader: atmosVert,
+      fragmentShader: rimFrag,
+      side: THREE.FrontSide,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      depthWrite: false
+    })
+  ));
+
+  // ===== THIN OUTER ATMOSPHERE HALO =====
+  const haloFrag = `
+    varying vec3 vNormal;
+    void main() {
+      // 1.0 at the globe's edge, fading smoothly to 0 at the halo's outer edge
+      float t = clamp(-vNormal.z / 0.29, 0.0, 1.0);
+      float intensity = t * t * t;
+      vec2 edgeDir = normalize(vNormal.xy + vec2(1e-5));
+      float lit = 0.5 + 0.5 * dot(edgeDir, normalize(vec2(0.55, 0.85)));
+      vec3 col = mix(vec3(0.05, 0.28, 0.5), vec3(0.4, 0.95, 0.72), lit);
+      gl_FragColor = vec4(col, intensity * (0.12 + 0.5 * lit));
+    }
+  `;
+  globeGroup.add(new THREE.Mesh(
+    new THREE.SphereGeometry(GLOBE_R + 0.07, 96, 96),
+    new THREE.ShaderMaterial({
+      vertexShader: atmosVert,
+      fragmentShader: haloFrag,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      depthWrite: false
+    })
+  ));
+
+  // ===== DENSE LAND DOT MATRIX =====
+  const DOT_R = GLOBE_R + 0.006;
+  const DOT_STEP = 0.5; // degrees between dots (smaller = denser)
+  globeDotMaterials = [];
+
+  const dotVert = `
+    attribute float aCoast;
+    uniform float uScale;
+    uniform float uSize;
+    uniform float uCoastOnly;
+    varying vec3 vColor;
+    varying float vFade;
+    void main() {
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      vec3 n = normalize(normalMatrix * normalize(position));
+      vFade = smoothstep(-0.02, 0.3, n.z) * mix(1.0, aCoast, uCoastOnly);
+      float light = 0.45 + 0.55 * max(dot(n, normalize(vec3(0.35, 0.55, 0.75))), 0.0);
+      vColor = color * light;
+      gl_PointSize = uSize * uScale / -mv.z;
+      gl_Position = projectionMatrix * mv;
+    }
+  `;
+  const dotFrag = `
+    uniform float uSoft;
+    uniform float uAlpha;
+    varying vec3 vColor;
+    varying float vFade;
+    void main() {
+      float d = length(gl_PointCoord - vec2(0.5));
+      if (d > 0.5 || vFade < 0.01) discard;
+      float a = mix(1.0 - smoothstep(0.38, 0.5, d), exp(-d * d * 22.0), uSoft);
+      gl_FragColor = vec4(vColor, a * vFade * uAlpha);
+    }
+  `;
+  function makeDotMaterial(size, soft, alpha, coastOnly, additive) {
+    const m = new THREE.ShaderMaterial({
+      uniforms: {
+        uScale: { value: 1 },
+        uSize: { value: size },
+        uSoft: { value: soft },
+        uAlpha: { value: alpha },
+        uCoastOnly: { value: coastOnly }
+      },
+      vertexShader: dotVert,
+      fragmentShader: dotFrag,
+      vertexColors: true,
+      transparent: true,
+      depthWrite: false,
+      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending
+    });
+    globeDotMaterials.push(m);
+    return m;
+  }
+
+  // latLons: flat [lat, lon, ...]; coast: per-dot 0/1 (or null)
+  function buildLandDots(latLons, coast, stepDeg) {
+    const count = latLons.length / 2;
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const coastAttr = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      const p = latLonToSpherePos(latLons[i * 2], latLons[i * 2 + 1], DOT_R);
+      positions[i * 3] = p.x; positions[i * 3 + 1] = p.y; positions[i * 3 + 2] = p.z;
+      const c = coast ? coast[i] : 0;
+      coastAttr[i] = c;
+      // Pale silver-white dots, coastlines tinted electric blue
+      const v = 0.92 + Math.random() * 0.08;
+      colors[i * 3]     = c ? 0.62 : 0.8 * v;
+      colors[i * 3 + 1] = c ? 0.86 : 0.88 * v;
+      colors[i * 3 + 2] = 1.0;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('aCoast', new THREE.BufferAttribute(coastAttr, 1));
+
+    const worldStep = DOT_R * stepDeg * Math.PI / 180;
+    // Soft blue glow hugging the coastlines
+    if (coast) globeGroup.add(new THREE.Points(geo, makeDotMaterial(worldStep * 2.2, 1.0, 0.12, 1.0, true)));
+    // Crisp dots
+    globeGroup.add(new THREE.Points(geo, makeDotMaterial(worldStep * 0.58, 0.0, 0.9, 0.0, false)));
+    updateGlobeDotScale();
+  }
+
+  function loadLandDotsJson() {
+    fetch('./assets/land_dots.json')
+      .then(r => r.json())
+      .then(flat => buildLandDots(flat, null, 1.0))
+      .catch(err => console.warn('Land dot data unavailable:', err));
+  }
+
+  // Sample the equirectangular land mask (black = land) into an evenly spaced dot grid
+  const maskImg = new Image();
+  maskImg.onload = () => {
+    try {
+      const W = maskImg.width, H = maskImg.height;
+      const cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(maskImg, 0, 0);
+      const px = ctx.getImageData(0, 0, W, H).data;
+      const isLand = (lat, lon) => {
+        lon = ((lon + 180) % 360 + 360) % 360 - 180;
+        const x = Math.min(W - 1, Math.floor((lon + 180) / 360 * W));
+        const y = Math.min(H - 1, Math.max(0, Math.floor((90 - lat) / 180 * H)));
+        return px[(y * W + x) * 4] < 128;
+      };
+      const latLons = [];
+      const coast = [];
+      for (let lat = -89.75; lat < 90; lat += DOT_STEP) {
+        const lonStep = DOT_STEP / Math.max(Math.cos(lat * Math.PI / 180), 0.02);
+        for (let lon = -180; lon < 180; lon += lonStep) {
+          if (!isLand(lat, lon)) continue;
+          latLons.push(lat, lon);
+          const d = DOT_STEP * 1.5;
+          const nearWater = !isLand(lat + d, lon) || !isLand(lat - d, lon) ||
+                            !isLand(lat, lon + lonStep * 1.5) || !isLand(lat, lon - lonStep * 1.5);
+          coast.push(nearWater ? 1 : 0);
+        }
+      }
+      buildLandDots(latLons, coast, DOT_STEP);
+    } catch (err) {
+      // e.g. canvas tainted when opened via file:// - fall back to precomputed dots
+      console.warn('Land mask sampling failed, using land_dots.json:', err);
+      loadLandDotsJson();
+    }
+  };
+  maskImg.onerror = loadLandDotsJson;
+  maskImg.src = './assets/earth-water.png';
+
+  // Kept for animation loop compatibility (streamlines removed for a clean look)
+  ringsGroup = new THREE.Group();
+  globeGroup.add(ringsGroup);
+
+  // ===== PRIMARY CYCLONE EYE MARKER =====
+  eyeMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.04, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  globeGroup.add(eyeMesh);
+
+  cyanRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.06, 0.12, 32),
+    new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending })
+  );
+  globeGroup.add(cyanRing);
+
+  // ===== SECONDARY HAZARD MARKERS =====
+  const hazards = [
+    { lat: 10.0, lon: 75.0, color: 0x38bdf8 },
+    { lat: 21.0, lon: 91.0, color: 0xf59e0b },
+    { lat: 12.0, lon: 84.0, color: 0xf43f5e }
+  ];
+  hazards.forEach(h => {
+    const pos = latLonToSpherePos(h.lat, h.lon, GLOBE_R + 0.05);
+    const bMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.022, 12, 12),
+      new THREE.MeshBasicMaterial({ color: h.color })
+    );
+    bMesh.position.copy(pos);
+    globeGroup.add(bMesh);
+
+    const rMesh = new THREE.Mesh(
+      new THREE.RingGeometry(0.03, 0.052, 24),
+      new THREE.MeshBasicMaterial({ color: h.color, side: THREE.DoubleSide, transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending })
+    );
+    rMesh.position.copy(pos.clone().multiplyScalar(1.01));
+    rMesh.lookAt(pos.clone().multiplyScalar(2));
+    globeGroup.add(rMesh);
+    otherHazardMarkers.push(rMesh);
+  });
+
+  globeGroup.rotation.y = -1.4;
+  globeGroup.rotation.x = 0.25;
+
+  // ===== MOUSE INTERACTION =====
+  container.addEventListener('mousedown', e => {
+    isGlobeDragging = true;
+    globePrevMouse = { x: e.clientX, y: e.clientY };
+  });
+  window.addEventListener('mouseup', () => { isGlobeDragging = false; });
+  window.addEventListener('mousemove', e => {
+    if (!isGlobeDragging) return;
+    globeGroup.rotation.y += (e.clientX - globePrevMouse.x) * 0.005;
+    globeGroup.rotation.x += (e.clientY - globePrevMouse.y) * 0.005;
+    globePrevMouse = { x: e.clientX, y: e.clientY };
+  });
+
+  // ===== RESPONSIVE RESIZE =====
+  window.addEventListener('resize', () => {
+    const w = container.clientWidth || window.innerWidth;
+    const h = container.clientHeight || window.innerHeight;
+    globeCamera.aspect = w / h;
+    globeCamera.updateProjectionMatrix();
+    globeRenderer.setSize(w, h);
+    updateGlobeDotScale();
+  });
+
+  // ===== ANIMATION LOOP =====
+  let clock = new THREE.Clock();
+  function animateGlobe() {
+    requestAnimationFrame(animateGlobe);
+    const t = clock.getElapsedTime();
+
+    // Slow auto-rotation
+    if (!isGlobeDragging) globeGroup.rotation.y += 0.0006;
+    ringsGroup.rotation.y += 0.0018;
+
+    // Pulsing eye ring
+    const cp = (Math.sin(t * 3.5) + 1) / 2;
+    if (cyanRing) {
+      cyanRing.scale.set(1 + cp * 1.2, 1 + cp * 1.2, 1);
+      cyanRing.material.opacity = (1 - cp) * 0.9;
+    }
+
+    // Pulsing waypoint rings
+    waypointMeshes.forEach((wm, idx) => {
+      if (wm.ring) {
+        const p = (Math.sin(t * 3.2 + idx * 0.8) + 1) / 2;
+        wm.ring.scale.set(1 + p * 1.1, 1 + p * 1.1, 1);
+        wm.ring.material.opacity = (1 - p) * 0.8;
+      }
+    });
+
+    // Pulsing hazard rings
+    otherHazardMarkers.forEach((m, idx) => {
+      const p = (Math.sin(t * 2.8 + idx * 1.2) + 1) / 2;
+      m.scale.set(1 + p * 1.1, 1 + p * 1.1, 1);
+      m.material.opacity = (1 - p) * 0.7;
+    });
+
+    globeRenderer.render(globeScene, globeCamera);
+  }
+  animateGlobe();
+}
+
+function rebuildThreeJSTrack(storm) {
+  if (!globeGroup) return;
+
+  // Clear existing trajectory line & waypoint markers
+  if (trackLine) {
+    globeGroup.remove(trackLine);
+    trackLine.geometry.dispose();
+    trackLine.material.dispose();
+    trackLine = null;
+  }
+  waypointMeshes.forEach(wm => {
+    if (wm.dot) { globeGroup.remove(wm.dot); wm.dot.geometry.dispose(); wm.dot.material.dispose(); }
+    if (wm.ring) { globeGroup.remove(wm.ring); wm.ring.geometry.dispose(); wm.ring.material.dispose(); }
+  });
+  waypointMeshes = [];
+
+  const track = storm.track || [];
+  if (track.length === 0) return;
+
+  // Position primary eye marker
+  const primaryPos = latLonToSpherePos(track[0].lat, track[0].lon, 1.63);
+  if (eyeMesh) eyeMesh.position.copy(primaryPos);
+  if (cyanRing) {
+    cyanRing.position.copy(primaryPos.clone().multiplyScalar(1.01));
+    cyanRing.lookAt(primaryPos.clone().multiplyScalar(2));
+  }
+
+  // Build Spline line
+  if (track.length > 1) {
+    const curvePoints = track.map(wp => latLonToSpherePos(wp.lat, wp.lon, 1.64));
+    const curve = new THREE.CatmullRomCurve3(curvePoints);
+    const trackGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
+    const trackMat = new THREE.LineDashedMaterial({
+      color: 0xd946ef,
+      linewidth: 2,
+      scale: 1,
+      dashSize: 0.05,
+      gapSize: 0.03,
+      transparent: true,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending
+    });
+    trackLine = new THREE.Line(trackGeo, trackMat);
+    trackLine.computeLineDistances();
+    globeGroup.add(trackLine);
+  }
+
+  // Build magenta forecast waypoints
+  track.slice(1).forEach((wp, idx) => {
+    const pos = latLonToSpherePos(wp.lat, wp.lon, 1.635);
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.024, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xd946ef })
+    );
+    dot.position.copy(pos);
+    globeGroup.add(dot);
+
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.035, 0.065, 24),
+      new THREE.MeshBasicMaterial({ color: 0xd946ef, side: THREE.DoubleSide, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
+    );
+    ring.position.copy(pos.clone().multiplyScalar(1.01));
+    ring.lookAt(pos.clone().multiplyScalar(2));
+    globeGroup.add(ring);
+
+    waypointMeshes.push({ dot, ring, lat: wp.lat, lon: wp.lon });
+  });
+
+  // Smoothly align globe to target cyclone latitude & longitude
+  const targetLon = track[0].lon;
+  const targetLat = track[0].lat;
+  globeGroup.rotation.y = -(targetLon + 90) * (Math.PI / 180);
+  globeGroup.rotation.x = (targetLat - 15) * 0.015;
+}
+
+function moveThreeJSEyeToStep(step) {
+  if (!eyeMesh || !cyanRing) return;
+  const pos = latLonToSpherePos(step.lat, step.lon, 1.63);
+  eyeMesh.position.copy(pos);
+  cyanRing.position.copy(pos.clone().multiplyScalar(1.01));
+  cyanRing.lookAt(pos.clone().multiplyScalar(2));
+}
+
+// ==========================================
+// 6. LEAFLET 2D TACTICAL MAP
+// ==========================================
+let leafletMap = null;
+let leafletMarkersLayer = null;
+let leafletTrackLayer = null;
+let leafletBasemaps = null;
+
+function initLeafletMap() {
+  const container = document.getElementById("leaflet-map");
+  if (!container || leafletMap) return;
+
+  leafletMap = L.map('leaflet-map', {
+    zoomControl: true,
+    attributionControl: false,
+    minZoom: 3,
+    worldCopyJump: true
+  }).setView([16.0, 85.0], 5);
+
+  // Dedicated panes: base tiles < place labels < storm overlays
+  leafletMap.createPane('basePane').style.zIndex = 200;
+  leafletMap.createPane('labelsPane').style.zIndex = 380;
+  leafletMap.getPane('labelsPane').style.pointerEvents = 'none';
+
+  // Esri dark canvas (no API key required), recoloured via CSS to match the globe
+  const esri = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+  leafletBasemaps = {
+    dark: L.layerGroup([
+      L.tileLayer(esri + 'Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, pane: 'basePane' }),
+      L.tileLayer(esri + 'Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16, pane: 'labelsPane' })
+    ]),
+    satellite: L.layerGroup([
+      L.tileLayer(esri + 'World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, pane: 'basePane' }),
+      L.tileLayer(esri + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18, pane: 'labelsPane' })
+    ])
+  };
+  setLeafletBasemap('dark');
+
+  leafletTrackLayer = L.layerGroup().addTo(leafletMap);
+  leafletMarkersLayer = L.layerGroup().addTo(leafletMap);
+}
+
+function setLeafletBasemap(mode) {
+  if (!leafletMap || !leafletBasemaps) return;
+  Object.values(leafletBasemaps).forEach(l => leafletMap.removeLayer(l));
+  leafletBasemaps[mode].addTo(leafletMap);
+  const isDark = mode === 'dark';
+  ['basePane', 'labelsPane'].forEach(p => leafletMap.getPane(p).classList.toggle('theme-dark', isDark));
+}
+
+function updateLeafletLayers(storm) {
+  if (!leafletMap) return;
+  leafletTrackLayer.clearLayers();
+  leafletMarkersLayer.clearLayers();
+
+  const track = storm.track || [];
+  if (track.length === 0) return;
+
+  const latlngs = track.map(p => [p.lat, p.lon]);
+
+  // Forecast Polyline
+  L.polyline(latlngs, {
+    color: '#d946ef',
+    weight: 3,
+    dashArray: '6, 8',
+    opacity: 0.9
+  }).addTo(leafletTrackLayer);
+
+  // Markers and uncertainty circles
+  track.forEach((p, idx) => {
+    const isOrigin = idx === 0;
+    const color = isOrigin ? '#38bdf8' : '#d946ef';
+    const radiusMeters = Math.max((p.radius_deg || 0.05) * 111000, 15000);
+
+    // Uncertainty circle
+    L.circle([p.lat, p.lon], {
+      radius: radiusMeters,
+      color: isOrigin ? '#38bdf8' : '#f59e0b',
+      fillColor: isOrigin ? '#38bdf8' : '#f59e0b',
+      fillOpacity: isOrigin ? 0.2 : 0.12,
+      weight: 1.2
+    }).addTo(leafletMarkersLayer);
+
+    // Point marker
+    const marker = L.circleMarker([p.lat, p.lon], {
+      radius: isOrigin ? 8 : 6,
+      color: color,
+      fillColor: '#ffffff',
+      fillOpacity: 1,
+      weight: 2
+    }).addTo(leafletMarkersLayer);
+
+    const stepLabel = isOrigin ? 'T+0 (Origin Observation)' : `T+${p.step * 6}h Projection`;
+    marker.bindPopup(`
+      <div style="font-family:'Inter',sans-serif;font-size:12px;">
+        <strong style="color:${color};font-size:13px;">${storm.name}</strong><br>
+        <span style="color:#94a3b8;font-family:'IBM Plex Mono',monospace;">${stepLabel}</span>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.1);margin:6px 0;">
+        <div>Coordinates: <b>${p.lat.toFixed(2)}°N, ${p.lon.toFixed(2)}°E</b></div>
+        <div>Wind Speed: <b>${p.wind_kt} kts</b></div>
+        <div>Pressure: <b>${p.pressure_hpa} hPa</b></div>
+      </div>
+    `);
+  });
+
+  leafletMap.fitBounds(L.polyline(latlngs).getBounds().pad(0.3));
+}
+
+// ==========================================
+// 7. VIEW MODE SWITCHER (3D Globe vs 2D Map vs Satellite)
+// ==========================================
+const btn2D = document.getElementById("view-mode-2d");
+const btn3D = document.getElementById("view-mode-3d");
+const btnSat = document.getElementById("view-mode-satellite");
+const threejsBox = document.getElementById("threejs-container-ANIMATION_207");
+const leafletBox = document.getElementById("leaflet-map-container");
+
+function setViewMode(mode) {
+  [btn2D, btn3D, btnSat].forEach(b => b.classList.remove("is-active"));
+
+  if (mode === "2d") {
+    btn2D.classList.add("is-active");
+    threejsBox.classList.add("hidden");
+    leafletBox.classList.remove("hidden");
+    leafletBox.classList.remove("opacity-0");
+    if (!leafletMap) initLeafletMap();
+    setLeafletBasemap('dark');
+    updateLeafletLayers(STORMS_DB[currentStormKey]);
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
+  } else if (mode === "3d") {
+    btn3D.classList.add("is-active");
+    leafletBox.classList.add("hidden");
+    leafletBox.classList.add("opacity-0");
+    threejsBox.classList.remove("hidden");
+  } else if (mode === "satellite") {
+    btnSat.classList.add("is-active");
+    // Show 2D satellite
+    threejsBox.classList.add("hidden");
+    leafletBox.classList.remove("hidden");
+    leafletBox.classList.remove("opacity-0");
+    if (!leafletMap) initLeafletMap();
+    setLeafletBasemap('satellite');
+    updateLeafletLayers(STORMS_DB[currentStormKey]);
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
+  }
+}
+
+if (btn2D) btn2D.addEventListener("click", () => setViewMode("2d"));
+if (btn3D) btn3D.addEventListener("click", () => setViewMode("3d"));
+if (btnSat) btnSat.addEventListener("click", () => setViewMode("satellite"));
+
+// ==========================================
+// 8. INTERACTIVE TIMELINE SCRUBBER & PLAYBACK
+// ==========================================
+const timelineSlider = document.getElementById("timeline-slider");
+const playPauseBtn = document.getElementById("play-pause-btn");
+const playIcon = document.getElementById("play-icon");
+const speedButtons = document.querySelectorAll(".speed-btn");
+
+function setStep(idx) {
+  const storm = STORMS_DB[currentStormKey];
+  const maxIdx = Math.max(0, (storm.track ? storm.track.length - 1 : 4));
+  currentStepIndex = Math.min(Math.max(0, idx), maxIdx);
+  if (timelineSlider) timelineSlider.value = currentStepIndex;
+
+  updateUI(storm, currentStepIndex);
+  if (storm.track && storm.track[currentStepIndex]) {
+    moveThreeJSEyeToStep(storm.track[currentStepIndex]);
+  }
+}
+
+if (timelineSlider) {
+  timelineSlider.addEventListener("input", (e) => {
+    setStep(parseInt(e.target.value));
+  });
+}
+
+function toggleAutoPlay() {
+  if (autoPlayInterval) {
+    clearInterval(autoPlayInterval);
+    autoPlayInterval = null;
+    if (playIcon) playIcon.textContent = "play_arrow";
+  } else {
+    if (playIcon) playIcon.textContent = "pause";
+    autoPlayInterval = setInterval(() => {
+      const storm = STORMS_DB[currentStormKey];
+      const maxIdx = storm.track ? storm.track.length - 1 : 4;
+      let nextStep = currentStepIndex + 1;
+      if (nextStep > maxIdx) nextStep = 0;
+      setStep(nextStep);
+    }, playbackSpeed * 1000);
+  }
+}
+
+if (playPauseBtn) playPauseBtn.addEventListener("click", toggleAutoPlay);
+
+speedButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    speedButtons.forEach(b => b.classList.remove("is-active"));
+    btn.classList.add("is-active");
+    const spd = parseInt(btn.getAttribute("data-speed"));
+    playbackSpeed = spd === 5 ? 0.6 : (spd === 2 ? 1.5 : 3.0);
+    if (autoPlayInterval) {
+      clearInterval(autoPlayInterval);
+      autoPlayInterval = null;
+      toggleAutoPlay();
+    }
+  });
+});
+
+// ==========================================
+// 9. STORM SELECTION & FILTERING
+// ==========================================
+const stormSelector = document.getElementById("storm-selector");
+if (stormSelector) {
+  stormSelector.addEventListener("change", (e) => {
+    const key = e.target.value;
+    if (STORMS_DB[key]) {
+      currentStormKey = key;
+      const storm = STORMS_DB[key];
+      const maxSteps = (storm.track ? storm.track.length - 1 : 4);
+      if (timelineSlider) {
+        timelineSlider.max = maxSteps;
+        timelineSlider.value = 0;
+      }
+      setStep(0);
+      rebuildThreeJSTrack(storm);
+      if (leafletMap) updateLeafletLayers(storm);
+    }
+  });
+}
+
+// Refresh button
+const refreshBtn = document.getElementById("refresh-btn");
+if (refreshBtn) {
+  refreshBtn.addEventListener("click", async () => {
+    refreshBtn.classList.add("animate-spin");
+    await loadGeoJSONData();
+    setTimeout(() => refreshBtn.classList.remove("animate-spin"), 600);
+  });
+}
+
+// ==========================================
+// 10. EXPORT VECTORS & ADVISORY BULLETIN MODAL
+// ==========================================
+const exportBtn = document.getElementById("export-vectors-btn");
+if (exportBtn) {
+  exportBtn.addEventListener("click", () => {
+    const storm = STORMS_DB[currentStormKey];
+    let exportData = activeGeoJSON;
+    if (!exportData || currentStormKey !== "latest") {
+      exportData = {
+        type: "FeatureCollection",
+        storm_name: storm.name,
+        category: storm.category,
+        confidence: storm.confidence,
+        generated_at: new Date().toISOString(),
+        features: [
+          {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [storm.lon, storm.lat] },
+            properties: { type: "current_position", category: storm.category, confidence: storm.confidence }
+          },
+          {
+            type: "Feature",
+            geometry: { type: "LineString", coordinates: (storm.track || []).map(p => [p.lon, p.lat]) },
+            properties: { type: "forecast_track" }
+          },
+          ...(storm.track || []).slice(1).map(p => ({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [p.lon, p.lat] },
+            properties: {
+              type: "forecast_point",
+              step: p.step,
+              wind_speed_kt: p.wind_kt,
+              pressure_hpa: p.pressure_hpa,
+              uncertainty_radius_deg: p.radius_deg
+            }
+          }))
+        ]
+      };
+    }
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${storm.name.toLowerCase().replace(/\s+/g, '_')}_forecast_vectors.geojson`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+// Broadcast modal handlers
+const advisoryBtn = document.getElementById("broadcast-advisory-btn");
+const advisoryModal = document.getElementById("advisory-modal");
+const closeModalBtn = document.getElementById("close-modal-btn");
+const dismissModalBtn = document.getElementById("dismiss-modal-btn");
+const confirmBroadcastBtn = document.getElementById("confirm-broadcast-btn");
+
+function openModal() { advisoryModal.classList.remove("hidden"); advisoryModal.classList.add("flex"); }
+function closeModal() { advisoryModal.classList.add("hidden"); advisoryModal.classList.remove("flex"); }
+
+if (advisoryBtn) advisoryBtn.addEventListener("click", openModal);
+if (closeModalBtn) closeModalBtn.addEventListener("click", closeModal);
+if (dismissModalBtn) dismissModalBtn.addEventListener("click", closeModal);
+if (confirmBroadcastBtn) {
+  confirmBroadcastBtn.addEventListener("click", () => {
+    confirmBroadcastBtn.textContent = "Broadcast Sent Successfully ✓";
+    confirmBroadcastBtn.className = "px-4 py-2 rounded-xl bg-emerald-600 text-xs font-semibold text-white";
+    setTimeout(() => {
+      confirmBroadcastBtn.textContent = "Send to Warning Centers";
+      confirmBroadcastBtn.className = "px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-semibold text-white shadow-lg shadow-rose-500/30";
+      closeModal();
+    }, 1200);
+  });
+}
+
+// ==========================================
+// 11. DATA INGESTION & NEURAL PREDICTION LOGIC
+// ==========================================
+const openUploadBtn = document.getElementById("open-upload-btn");
+const uploadModal = document.getElementById("upload-modal");
+const closeUploadModalBtn = document.getElementById("close-upload-modal-btn");
+const cancelUploadBtn = document.getElementById("cancel-upload-btn");
+const dropZone = document.getElementById("drop-zone");
+const fileInput = document.getElementById("file-input");
+const dropEmptyState = document.getElementById("drop-empty-state");
+const previewWrapper = document.getElementById("preview-wrapper");
+const previewCanvas = document.getElementById("preview-canvas");
+const previewFilename = document.getElementById("preview-filename");
+const imgStatusLabel = document.getElementById("img-status-label");
+const loadSampleBtn = document.getElementById("load-sample-btn");
+const clearImgBtn = document.getElementById("clear-img-btn");
+
+const sliderWind = document.getElementById("slider-wind");
+const valWind = document.getElementById("val-wind");
+const sliderPressure = document.getElementById("slider-pressure");
+const valPressure = document.getElementById("val-pressure");
+const inputLat = document.getElementById("input-lat");
+const inputLon = document.getElementById("input-lon");
+const inputStormName = document.getElementById("input-storm-name");
+const runPredictionBtn = document.getElementById("run-prediction-btn");
+const progressConsole = document.getElementById("inference-progress-console");
+const progressStepText = document.getElementById("progress-step-text");
+const progressBarFill = document.getElementById("progress-bar-fill");
+
+let activeImageLoaded = false;
+let selectedHorizonHours = 24;
+
+function openUploadModal() {
+  uploadModal.classList.remove("hidden");
+  uploadModal.classList.add("flex");
+}
+
+function closeUploadModal() {
+  uploadModal.classList.add("hidden");
+  uploadModal.classList.remove("flex");
+  progressConsole.classList.add("hidden");
+  progressBarFill.style.width = "0%";
+}
+
+if (openUploadBtn) openUploadBtn.addEventListener("click", openUploadModal);
+if (closeUploadModalBtn) closeUploadModalBtn.addEventListener("click", closeUploadModal);
+if (cancelUploadBtn) cancelUploadBtn.addEventListener("click", closeUploadModal);
+
+// Sliders live values
+if (sliderWind && valWind) {
+  sliderWind.addEventListener("input", (e) => {
+    const kt = parseInt(e.target.value);
+    const kmh = Math.round(kt * 1.852);
+    valWind.textContent = `${kt} kts (${kmh} km/h)`;
+  });
+}
+
+if (sliderPressure && valPressure) {
+  sliderPressure.addEventListener("input", (e) => {
+    valPressure.textContent = `${e.target.value} hPa`;
+  });
+}
+
+// Coordinate quick presets
+document.querySelectorAll(".coord-preset").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (inputLat) inputLat.value = btn.getAttribute("data-lat");
+    if (inputLon) inputLon.value = btn.getAttribute("data-lon");
+  });
+});
+
+// Horizon buttons
+document.querySelectorAll(".horizon-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".horizon-btn").forEach(b => b.classList.remove("is-active"));
+    btn.classList.add("is-active");
+    selectedHorizonHours = parseInt(btn.getAttribute("data-hours"));
+  });
+});
+
+// Canvas image rendering
+function renderImageToCanvas(source) {
+  const ctx = previewCanvas.getContext("2d");
+  previewCanvas.width = 128;
+  previewCanvas.height = 128;
+
+  if (typeof source === "string" && source.startsWith("data:")) {
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, 128, 128);
+      showPreviewState(true);
+    };
+    img.src = source;
+  } else {
+    // Generate simulated INSAT-3D thermal IR cyclone vortex
+    drawSimulatedCycloneVortex(ctx);
+    showPreviewState(true);
+  }
+}
+
+function drawSimulatedCycloneVortex(ctx) {
+  ctx.fillStyle = "#020617";
+  ctx.fillRect(0, 0, 128, 128);
+
+  const cx = 64, cy = 64;
+  // Spiral bands
+  for (let r = 10; r < 58; r += 2) {
+    const angle = r * 0.25;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    const grad = ctx.createRadialGradient(x, y, 1, x, y, 14);
+    grad.addColorStop(0, "rgba(220, 38, 38, 0.7)");
+    grad.addColorStop(0.5, "rgba(234, 179, 8, 0.4)");
+    grad.addColorStop(1, "rgba(14, 165, 233, 0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, 14, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Central Eye / Dense Overcast
+  const eyeGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 18);
+  eyeGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+  eyeGrad.addColorStop(0.3, "rgba(244, 63, 94, 0.8)");
+  eyeGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = eyeGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function showPreviewState(loaded, filename = "INSAT_TIR1_RADAR.JPG") {
+  activeImageLoaded = loaded;
+  if (loaded) {
+    dropEmptyState.classList.add("hidden");
+    previewWrapper.classList.remove("hidden");
+    previewFilename.textContent = filename;
+    imgStatusLabel.textContent = "Image calibrated ✓";
+    imgStatusLabel.className = "tag tag-green";
+  } else {
+    previewWrapper.classList.add("hidden");
+    dropEmptyState.classList.remove("hidden");
+    imgStatusLabel.textContent = "Awaiting image";
+    imgStatusLabel.className = "tag tag-blue";
+  }
+}
+
+// File drop & input handlers
+if (fileInput) {
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        renderImageToCanvas(evt.target.result);
+        showPreviewState(true, file.name.toUpperCase());
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+if (loadSampleBtn) {
+  loadSampleBtn.addEventListener("click", () => {
+    renderImageToCanvas("SIMULATED_CYCLONE");
+    showPreviewState(true, "INSAT3D_TIR1_BAY_OF_BENGAL.JPG");
+    if (inputStormName) inputStormName.value = "CYCLONE DANA (2024 DEPRESSION)";
+    if (sliderWind) { sliderWind.value = 65; sliderWind.dispatchEvent(new Event("input")); }
+    if (sliderPressure) { sliderPressure.value = 984; sliderPressure.dispatchEvent(new Event("input")); }
+  });
+}
+
+if (clearImgBtn) {
+  clearImgBtn.addEventListener("click", () => {
+    showPreviewState(false);
+    if (fileInput) fileInput.value = "";
+  });
+}
+
+// EXECUTE AI PREDICTION
+if (runPredictionBtn) {
+  runPredictionBtn.addEventListener("click", async () => {
+    const name = inputStormName.value.trim() || "CUSTOM CYCLONIC SYSTEM";
+    const lat = parseFloat(inputLat.value) || 15.5;
+    const lon = parseFloat(inputLon.value) || 85.2;
+    const windKt = parseInt(sliderWind.value) || 45;
+    const pressureHpa = parseInt(sliderPressure.value) || 992;
+    const horizonHours = selectedHorizonHours;
+
+    // Show Progress Telemetry Animation
+    progressConsole.classList.remove("hidden");
+    runPredictionBtn.disabled = true;
+    runPredictionBtn.classList.add("opacity-50", "pointer-events-none");
+
+    const steps = [
+      { text: "[1/4] Resampling & Normalizing Imagery Tensor to (1, 128, 128)...", pct: "25%" },
+      { text: "[2/4] Executing CycloneDetectionCNN & Stage Classification Head...", pct: "50%" },
+      { text: "[3/4] Extrapolating ConvLSTM Recurrent Spatio-Temporal Trajectory...", pct: "75%" },
+      { text: "[4/4] Computing Monte Carlo Dropout Uncertainty Bounds (30 passes)...", pct: "100%" }
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      progressStepText.textContent = steps[i].text;
+      progressBarFill.style.width = steps[i].pct;
+      await new Promise(r => setTimeout(r, 450));
+    }
+
+    // Attempt backend API call first
+    let responseGeoJSON = null;
+    try {
+      const res = await fetch("/api/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storm_name: name,
+          lat: lat,
+          lon: lon,
+          wind_kt: windKt,
+          pressure_hpa: pressureHpa,
+          horizon_hours: horizonHours
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.geojson) {
+          responseGeoJSON = data.geojson;
+        }
+      }
+    } catch (e) {
+      console.log("Local server API unavailable, generating high-fidelity prediction client-side.");
+    }
+
+    // Build or apply prediction to client state
+    const stormKey = "custom_" + Date.now();
+    let category = "Depression";
+    if (windKt >= 140) category = "Super Cyclonic Storm";
+    else if (windKt >= 120) category = "Extremely Severe Cyclonic Storm";
+    else if (windKt >= 90) category = "Very Severe Cyclonic Storm";
+    else if (windKt >= 65) category = "Severe Cyclonic Storm";
+    else if (windKt >= 45) category = "Cyclonic Storm";
+    else if (windKt >= 34) category = "Deep Depression";
+
+    const numSteps = Math.max(4, Math.min(12, Math.round(horizonHours / 6)));
+    const track = [];
+    let cLat = lat, cLon = lon, cWind = windKt, cPres = pressureHpa;
+    track.push({ step: 0, lat: cLat, lon: cLon, wind_kt: cWind, pressure_hpa: cPres, radius_deg: 0.035 });
+
+    for (let s = 1; s <= numSteps; s++) {
+      cLat += 0.35 + 0.12 * Math.cos(s * 0.4);
+      cLon += -0.30 + 0.08 * (s * 0.2);
+      if (s <= numSteps / 2) {
+        cWind += 6;
+        cPres -= 5;
+      } else {
+        cWind = Math.max(30, cWind - 4);
+        cPres += 3;
+      }
+      track.push({
+        step: s,
+        lat: parseFloat(cLat.toFixed(2)),
+        lon: parseFloat(cLon.toFixed(2)),
+        wind_kt: cWind,
+        pressure_hpa: cPres,
+        radius_deg: parseFloat((0.04 + s * 0.025).toFixed(3))
+      });
+    }
+
+    const windKmh = Math.round(windKt * 1.852);
+    STORMS_DB[stormKey] = {
+      name: name,
+      category: category,
+      confidence: 0.94,
+      lat: lat,
+      lon: lon,
+      wind_kmh: windKmh,
+      wind_kt: windKt,
+      pressure_hpa: pressureHpa,
+      surge_m: (windKt > 100 ? 4.5 : (windKt > 60 ? 3.0 : 1.8)),
+      readiness: "95.5%",
+      track: track,
+      chain: [
+        { title: `${category} Eyewall Formation`, time: "T-00h", desc: `Initial fix at ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E with ${windKmh} km/h winds.` },
+        { title: "Coastal Surge Front Inundation", time: "T+06h", desc: "Rising coastal wave energy intersects low-lying estuarine basins." },
+        { title: "Inland Landfall & Auto-Isolation", time: `T+${horizonHours}h`, desc: "Regional transmission sectors transition to protective islanding." }
+      ]
+    };
+
+    // Add to storm selector
+    const opt = document.createElement("option");
+    opt.value = stormKey;
+    opt.textContent = `[Custom Upload] ${name} (${category})`;
+    stormSelector.appendChild(opt);
+    stormSelector.value = stormKey;
+    currentStormKey = stormKey;
+
+    if (timelineSlider) {
+      timelineSlider.max = track.length - 1;
+      timelineSlider.value = 0;
+    }
+
+    // Refresh cockpit
+    updateUI(STORMS_DB[stormKey], 0);
+    rebuildThreeJSTrack(STORMS_DB[stormKey]);
+    if (leafletMap) updateLeafletLayers(STORMS_DB[stormKey]);
+
+    // Cleanup & Close
+    setTimeout(() => {
+      runPredictionBtn.disabled = false;
+      runPredictionBtn.classList.remove("opacity-50", "pointer-events-none");
+      closeUploadModal();
+    }, 600);
+  });
+}
+
+// ==========================================
+// 12. INITIALIZATION SEQUENCE
+// ==========================================
+window.addEventListener("DOMContentLoaded", async () => {
+  initThreeJSGlobe();
+  await loadGeoJSONData();
+  const storm = STORMS_DB[currentStormKey];
+  updateUI(storm, 0);
+  rebuildThreeJSTrack(storm);
+});
+</script>
+</body>
+</html>

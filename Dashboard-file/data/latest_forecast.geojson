@@ -1,0 +1,119 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.2,
+          15.5
+        ]
+      },
+      "properties": {
+        "type": "current_position",
+        "category": "Deep Depression",
+        "confidence": 0.3232431709766388
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            85.2,
+            15.5
+          ],
+          [
+            85.17946814633906,
+            15.451083544641733
+          ],
+          [
+            85.1958674069494,
+            15.365028914064169
+          ],
+          [
+            85.33106634281576,
+            15.339830296114087
+          ],
+          [
+            85.35254397317767,
+            15.306583242490888
+          ]
+        ]
+      },
+      "properties": {
+        "type": "forecast_track"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.17946814633906,
+          15.451083544641733
+        ]
+      },
+      "properties": {
+        "type": "forecast_point",
+        "step": 1,
+        "wind_speed_kt": -0.04223740100860596,
+        "pressure_hpa": 0.0016377483261749148,
+        "uncertainty_radius_deg": 0.044901784509420395
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.1958674069494,
+          15.365028914064169
+        ]
+      },
+      "properties": {
+        "type": "forecast_point",
+        "step": 2,
+        "wind_speed_kt": -0.05465876683592796,
+        "pressure_hpa": 0.0772000178694725,
+        "uncertainty_radius_deg": 0.0515994094312191
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.33106634281576,
+          15.339830296114087
+        ]
+      },
+      "properties": {
+        "type": "forecast_point",
+        "step": 3,
+        "wind_speed_kt": 0.07534209638834,
+        "pressure_hpa": -0.019645385444164276,
+        "uncertainty_radius_deg": 0.05695077404379845
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.35254397317767,
+          15.306583242490888
+        ]
+      },
+      "properties": {
+        "type": "forecast_point",
+        "step": 4,
+        "wind_speed_kt": -0.06740497052669525,
+        "pressure_hpa": 0.0133021529763937,
+        "uncertainty_radius_deg": 0.052355825901031494
+      }
+    }
+  ]
+}
